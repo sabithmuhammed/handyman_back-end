@@ -7,7 +7,7 @@ export default class UserUsecase {
     constructor(
         private userRepository: UserRepository,
         private encrypt: Encrypt,
-        private jwtCreate: JwtCreate
+        private jwtCreate: JwtCreate,
     ) {}
 
     async saveUser(user: User) {
@@ -17,7 +17,22 @@ export default class UserUsecase {
             const userSave = await this.userRepository.save(user);
             return {
                 status: 200,
-                data: userSave,
+                data: { name: userSave.name, email: userSave.email,isTradesman:userSave.isTradesman },
+            };
+        } catch (error) {
+            return {
+                status: 400,
+                data: error,
+            };
+        }
+    }
+
+    async emailExistCheck(email: string) {
+        try {
+            const userFound = await this.userRepository.findByEmail(email);
+            return {
+                status: 200,
+                data: userFound,
             };
         } catch (error) {
             return {
