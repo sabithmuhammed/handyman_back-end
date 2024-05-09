@@ -16,4 +16,12 @@ export default class UserRepository implements UserRepositoryInterface {
             return null;
         }
     }
+    async findById(id: string): Promise<User | null> {
+        const user = await UserModel.findById(id);
+        if (user) {
+            return user;
+        } else {
+            return null;
+        }
+    }
 }

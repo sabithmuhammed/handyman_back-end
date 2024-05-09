@@ -7,15 +7,14 @@ export default function errorHandler(
     next: NextFunction
 ): void {
     if (err.name === "UnauthorizedError") {
-        res.status(401).json({ error: "Unauthorized" });
+        res.status(401).json("Unauthorized");
         return;
     }
     if (err.name === "ValidationError") {
-        res.status(400).json({
-            error: "Validation Error",
-        });
+        res.status(400).json("Validation Error",
+        );
         return;
     }
 
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json("Internal Server Error");
 }
