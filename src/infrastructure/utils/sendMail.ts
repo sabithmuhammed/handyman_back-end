@@ -18,7 +18,7 @@ export default class SendMail {
             from: process.env.MAIL_USERNAME,
             to: emailId,
             subject,
-            text: content,
+            html: content,
         };
 
         this.transporter.sendMail(mailOptions, (err) => {
@@ -45,11 +45,12 @@ export default class SendMail {
         const emailBody = mailGenerator.generate(email);
         return emailBody;
     }
-    sendOtpMail(emailId: string, otp: string): void {
+    sendOtpMail(emailId: string,name:string, otp: string): void {
         const subject = "handyMan email verification";
 
         const email = {
             body: {
+                name:name,
                 intro: "Welcome to handyMan! We're very excited to have you on board.",
                 action: {
                     instructions: "Use this otp to verify your account.",

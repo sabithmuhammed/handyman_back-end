@@ -6,7 +6,7 @@ import http from "http";
 
 //route imports
 import userRouter from "../router/userRoute";
-
+import commonRouter from "../router/commonRoute";
 
 import errorHandler from "../middlewares/errorhandler";
 
@@ -41,6 +41,7 @@ app.use(session(sessionOptions));
 
 //using routes
 app.use("/api/users", userRouter);
+app.use("/api/common", commonRouter);
 
 app.use(errorHandler);
 

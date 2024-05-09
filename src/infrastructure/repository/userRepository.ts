@@ -8,7 +8,7 @@ export default class UserRepository implements UserRepositoryInterface {
         await newUser.save();
         return newUser;
     }
-    async findByEmail(email: string): Promise<any> {
+    async findByEmail(email: string): Promise<User | null> {
         const user = await UserModel.findOne({ email: email });
         if (user) {
             return user;

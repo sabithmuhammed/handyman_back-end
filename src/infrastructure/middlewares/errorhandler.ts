@@ -13,7 +13,6 @@ export default function errorHandler(
     if (err.name === "ValidationError") {
         res.status(400).json({
             error: "Validation Error",
-            details: err.message,
         });
         return;
     }
