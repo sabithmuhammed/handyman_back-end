@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import Mailgen from "mailgen";
+import { OTP_TIMER } from "../constants/constants";
 
 export default class SendMail {
     constructor(
@@ -53,7 +54,7 @@ export default class SendMail {
                 name:name,
                 intro: "Welcome to handyMan! We're very excited to have you on board.",
                 action: {
-                    instructions: "Use this otp to verify your account.",
+                    instructions: `Use this otp to verify your account. It will expire after ${(OTP_TIMER/60)/1000} minutes`,
                     button: {
                         color: "#22BC66", // Optional action button color
                         text: otp,

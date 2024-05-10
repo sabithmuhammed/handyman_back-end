@@ -66,7 +66,19 @@ export default class UserController {
         }
     }
 
-   
+    async resentOtp(req: Req, res: Res, next: Next) {
+        try {
+            const { email, name } = req.body;
+
+            const otp = await this.genOtp.generateOtp(6);
+            this.otpUsecase.saveOtp({ email, otp });
+            this.sendMail.sendOtpMail(email, name, otp);
+
+            res.status(STATUS_CODES.OK).json({ status: "success" });
+        } catch (error) {
+            next(error);
+        }
+    }
 
     async socialLogin(req: Req, res: Res, next: Next) {
         try {
@@ -100,6 +112,63 @@ export default class UserController {
                 status: "success",
                 data: { message: "Logged out successfully" },
             });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async forgotPassword(req: Req, res: Res, next: Next) {
+        try {
+            const { email } = req.body;
+            if (email) {
+                const userFound = await this.userUsecase.emailExistCheck(email);
+                if (userFound.data) {
+                    const { email, name } = userFound.data;
+                    const otp = await this.genOtp.generateOtp(6);
+                    this.otpUsecase.saveOtp({ email, otp });
+                    this.sendMail.sendOtpMail(email, name, otp);
+
+                    res.status(STATUS_CODES.OK).json({ name, email });
+                } else {
+                    res.status(STATUS_CODES.NOT_FOUND).json(
+                        "No account found associated with this email."
+                    );
+                }
+            }
+            throw new Error("ValidationError");
+        } catch (error) {
+            next(error);
+        }
+    }
+    async forgotPasswordVerifyOtp(req: Req, res: Res, next: Next) {
+        try {
+            const { email, otp } = req.body;
+            if (!(await this.otpUsecase.compareOtp({ email, otp })).data) {
+                res.status(STATUS_CODES.OK).json({
+                    status: "failed",
+                    message: "OTP doesn't match",
+                });
+                return;
+            }
+            res.status(STATUS_CODES.OK).json({ status: "success" });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async forgotPasswordChange(req: Req, res: Res, next: Next) {
+        try {
+            const { email, otp, password } = req.body;
+            if (!(await this.otpUsecase.compareOtp({ email, otp })).data) {
+                throw new Error("UnauthorizedError");
+            }
+            await this.otpUsecase.removeOtp(email);
+            const updateUser = await this.userUsecase.changePassword(
+                email,
+                password
+            );
+            const status = updateUser ? "success" : "failed";
+            res.status(updateUser.status).json({ status });
         } catch (error) {
             next(error);
         }

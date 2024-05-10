@@ -24,4 +24,14 @@ export default class UserRepository implements UserRepositoryInterface {
             return null;
         }
     }
+    async updatePassword(
+        email: string,
+        password: string
+    ): Promise<User | null> {
+        const user = await UserModel.findOneAndUpdate(
+            { email },
+            { $set: { password } }
+        );
+        return user;
+    }
 }

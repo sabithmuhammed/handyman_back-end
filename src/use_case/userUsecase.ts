@@ -118,4 +118,21 @@ export default class UserUsecase {
             data: userFound,
         };
     }
+
+    async changePassword(email: string, password: string) {
+        const userUpdate = await this.userRepository.updatePassword(
+            email,
+            password
+        );
+        if (!userUpdate) {
+            return {
+                status: STATUS_CODES.NOT_FOUND,
+                data: "No account found",
+            };
+        }
+        return {
+            status: STATUS_CODES.OK,
+            data: userUpdate,
+        };
+    }
 }
