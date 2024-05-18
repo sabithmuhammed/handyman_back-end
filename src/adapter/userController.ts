@@ -102,21 +102,6 @@ export default class UserController {
         }
     }
 
-    async logout(req: Req, res: Res, next: Next) {
-        try {
-            res.cookie("refresh_token", "", {
-                httpOnly: true,
-                expires: new Date(0),
-            });
-            res.status(STATUS_CODES.OK).json({
-                status: "success",
-                data: { message: "Logged out successfully" },
-            });
-        } catch (error) {
-            next(error);
-        }
-    }
-
     async forgotPassword(req: Req, res: Res, next: Next) {
         try {
             const { email } = req.body;

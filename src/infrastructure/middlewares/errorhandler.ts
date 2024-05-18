@@ -6,6 +6,8 @@ export default function errorHandler(
     res: Response,
     next: NextFunction
 ): void {
+    console.log(err);
+    
     if (err.name === "UnauthorizedError") {
         res.status(401).json("Unauthorized");
         return;

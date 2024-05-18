@@ -64,6 +64,7 @@ export default class UserUsecase {
                             isTradesman: userFound.isTradesman,
                         },
                         accessToken,
+                        isAdmin: false,
                     },
                     refreshToken,
                 };
@@ -134,5 +135,26 @@ export default class UserUsecase {
             status: STATUS_CODES.OK,
             data: userUpdate,
         };
+    }
+
+    async getUserById(id: string) {
+        const userFound = await this.userRepository.findById(id);
+        if (userFound) {
+            return {
+                status: STATUS_CODES.OK,
+                data: userFound,
+            };
+        }
+    }
+    async toggleBlock(userId:string,status:boolean){
+        const user = await this.userRepository.toggleBlock(userId,status);
+        if(user){
+            return {
+                status:STATUS_CODES.OK,
+                data:{
+                    status:"success"
+                }
+            }
+        }
     }
 }

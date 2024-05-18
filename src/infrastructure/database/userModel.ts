@@ -12,7 +12,6 @@ const UserSchema: Schema = new Schema<User | Document>({
     },
     password: {
         type: String,
-        required: true,
     },
     isBlocked: {
         type: Boolean,

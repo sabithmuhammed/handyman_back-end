@@ -14,6 +14,7 @@ export default class SendMail {
             }
         )
     ) {}
+
     sendMail(emailId: string, subject: string, content: string): void {
         const mailOptions: nodemailer.SendMailOptions = {
             from: process.env.MAIL_USERNAME,
@@ -46,6 +47,7 @@ export default class SendMail {
         const emailBody = mailGenerator.generate(email);
         return emailBody;
     }
+
     sendOtpMail(emailId: string,name:string, otp: string): void {
         const subject = "handyMan email verification";
 
@@ -61,9 +63,52 @@ export default class SendMail {
                         link: "#",
                     },
                 },
-                outro: "Do not share this otp with anyone.",
+                outro: "",
             },
         };
+        const content = this.generateMailTemplate(email);
+        this.sendMail(emailId, subject, content);
+    }
+
+    sendVerifyMail(emailId:string,name:string):void{
+        const subject = "handyMan - tradesman verification";
+
+        const email = {
+            body: {
+                name:name,
+                intro: "Congratulations, Your account has been verified.",
+                action: {
+                    instructions: `Go to your dashboard to set up your working hours and schedules.`,
+                    button: {
+                        color: "#22BC66", // Optional action button color
+                        text: "Go to your dashboard",
+                        link: process.env.CORS_URL+"/tradesman/dashboard",
+                    },
+                },
+            },
+        };
+        const content = this.generateMailTemplate(email);
+        this.sendMail(emailId, subject, content);
+    }
+
+    sendRejectMail(emailId:string,name:string):void{
+        const subject = "handyMan - tradesman verification";
+
+        const email = {
+            body: {
+                name:name,
+                intro: "We are sorry to inform you that your account verification is rejected.",
+                action: {
+                    instructions: `You can re-try the registration.`,
+                    button: {
+                        color: "#22BC66", // Optional action button color
+                        text: "Go to registration",
+                        link: process.env.CORS_URL+"/tradesman/register",
+                    },
+                },
+            },
+        };
+
         const content = this.generateMailTemplate(email);
         this.sendMail(emailId, subject, content);
     }

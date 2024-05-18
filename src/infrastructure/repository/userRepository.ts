@@ -1,29 +1,24 @@
 import User from "../../domain/user";
 import UserModel from "../database/userModel";
-import UserRepositoryInterface from "../../use_case/interface/userRepositoryInterface";
+import IUserRepository from "../../use_case/interface/IUserRepository";
 
-export default class UserRepository implements UserRepositoryInterface {
+export default class UserRepository implements IUserRepository {
     async save(user: User): Promise<any> {
         const newUser = new UserModel(user);
         await newUser.save();
         return newUser;
     }
+
     async findByEmail(email: string): Promise<User | null> {
         const user = await UserModel.findOne({ email: email });
-        if (user) {
-            return user;
-        } else {
-            return null;
-        }
+        return user;
     }
+
     async findById(id: string): Promise<User | null> {
         const user = await UserModel.findById(id);
-        if (user) {
-            return user;
-        } else {
-            return null;
-        }
+        return user;
     }
+
     async updatePassword(
         email: string,
         password: string
@@ -31,6 +26,17 @@ export default class UserRepository implements UserRepositoryInterface {
         const user = await UserModel.findOneAndUpdate(
             { email },
             { $set: { password } }
+        );
+        return user;
+    }
+
+    async toggleBlock(userId: string, status: boolean): Promise<User | null> {
+        const user = await UserModel.findByIdAndUpdate(
+            userId,
+            {
+                $set: { isBlocked: status },
+            },
+            { new: true }
         );
         return user;
     }

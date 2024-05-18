@@ -1,9 +1,13 @@
+import User from "../../domain/user";
 import { STATUS_CODES } from "../constants/httpStatusCodes";
+import ROLES from "../constants/roles";
+import TradesmanRepository from "../repository/tradesmanRepository";
 import UserRepository from "../repository/userRepository";
 import { Req, Res, Next } from "../types/expressTypes";
 import jwt, { JwtPayload } from "jsonwebtoken";
 
 const userRepository = new UserRepository();
+const tradesmanRepository = new TradesmanRepository();
 
 const userAuth = async (req: Req, res: Res, next: Next) => {
     try {
@@ -14,18 +18,37 @@ const userAuth = async (req: Req, res: Res, next: Next) => {
                 accessToken,
                 process.env.JWT_KEY as string
             ) as JwtPayload;
-            const userData = await userRepository.findByEmail(decoded.userId);
-            if (userData) {
-                if (userData.isBlocked) {
-                    res.status(STATUS_CODES.FORBIDDEN).json(
-                        "You have been blocked."
+            if (
+                decoded.role === ROLES.USER ||
+                decoded.role === ROLES.TRADESMAN
+            ) {
+                let userId: string | null = null;
+                if (decoded.role === ROLES.TRADESMAN) {
+                    const tradesman = await tradesmanRepository.findById(
+                        decoded.userId
                     );
+                    if (tradesman) {
+                        userId = tradesman.userId as string;
+                    }
+                }
+                const userData = await userRepository.findById(
+                    userId || decoded.userId
+                );
+
+                if (userData) {
+                    if (userData.isBlocked) {
+                        res.status(STATUS_CODES.FORBIDDEN).json(
+                            "You have been blocked."
+                        );
+                        return;
+                    }
+                    (req as any).user = userData._id;
+                    next();
                     return;
                 }
-                next();
-                return;
             }
         }
+
         res.status(STATUS_CODES.UNAUTHORIZED).json(
             "Unauthorized access, Invalid token"
         );

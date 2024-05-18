@@ -53,6 +53,6 @@ route.post("/google-signup", (req, res, next) =>
     controller.socialLogin(req, res, next)
 );
 
-route.get("/logout", (req, res, next) => controller.logout(req, res, next));
+
 
 export default route;

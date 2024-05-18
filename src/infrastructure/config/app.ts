@@ -3,16 +3,19 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import session, { SessionOptions } from "express-session";
 import http from "http";
+import morgan from "morgan"
 
 //route imports
 import userRouter from "../router/userRoute";
 import commonRouter from "../router/commonRoute";
+import tradesmanRouter from "../router/tradesmanRoute";
+import adminRouter from "../router/adminRoute";
 
 import errorHandler from "../middlewares/errorhandler";
 
 const app = express();
 const httpServer = http.createServer(app);
-
+app.use(morgan("dev"))
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -42,6 +45,8 @@ app.use(session(sessionOptions));
 //using routes
 app.use("/api/users", userRouter);
 app.use("/api/common", commonRouter);
+app.use("/api/tradesman", tradesmanRouter);
+app.use("/api/admin", adminRouter);
 
 app.use(errorHandler);
 
