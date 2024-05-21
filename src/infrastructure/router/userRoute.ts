@@ -3,6 +3,8 @@ const route = express.Router();
 
 import UserController from "../../adapter/userController";
 import UserRepository from "../repository/userRepository";
+import TradesmanRepository from "../repository/tradesmanRepository";
+import TradesmanUsecase from "../../use_case/tradesmanUsecase";
 import UserUsecase from "../../use_case/userUsecase";
 import Encrypt from "../utils/hashPassword";
 import JwtCreate from "../utils/jwtCreate";
@@ -18,13 +20,16 @@ const sendMail = new SendMail();
 
 const repository = new UserRepository();
 const useCase = new UserUsecase(repository, encrypt, jwtCreate);
+const tradesmanRepository = new TradesmanRepository();
+const tradesmanUsecase = new TradesmanUsecase(tradesmanRepository, jwtCreate);
 const otpRepository = new OtpRepository();
 const otpUsecase = new OtpUsecase(otpRepository, encrypt);
 const controller = new UserController(
     useCase,
     generateOtp,
     sendMail,
-    otpUsecase
+    otpUsecase,
+    tradesmanUsecase
 );
 
 route.post("/signup", (req, res, next) => controller.signUp(req, res, next));
@@ -53,6 +58,7 @@ route.post("/google-signup", (req, res, next) =>
     controller.socialLogin(req, res, next)
 );
 
-
+route.get("/get-tradesmen",(req, res, next) =>
+    controller.getTradesmen(req, res, next))
 
 export default route;

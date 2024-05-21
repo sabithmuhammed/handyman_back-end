@@ -8,13 +8,15 @@ import OtpUsecase from "../use_case/otpUsecase";
 import { STATUS_CODES } from "../infrastructure/constants/httpStatusCodes";
 import ROLES from "../infrastructure/constants/roles";
 import { REFRESH_TOKEN_MAX_AGE } from "../infrastructure/constants/constants";
+import TradesmanUsecase from "../use_case/tradesmanUsecase";
 
 export default class UserController {
     constructor(
         private userUsecase: UserUsecase,
         private genOtp: GenerateOtp,
         private sendMail: SendMail,
-        private otpUsecase: OtpUsecase
+        private otpUsecase: OtpUsecase,
+        private tradesmanUsecase:TradesmanUsecase
     ) {}
 
     async signUp(req: Req, res: Res, next: Next) {
@@ -154,6 +156,17 @@ export default class UserController {
             );
             const status = updateUser ? "success" : "failed";
             res.status(updateUser.status).json({ status });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getTradesmen(req: Req, res: Res, next: Next){
+        try {
+            const page = req.query.page as string | undefined;
+            const pageSize = req.query.pageSize as string | undefined;
+            const tradesmen = await this.tradesmanUsecase.getTradesmen(page,pageSize);
+            res.status(tradesmen.status).json(tradesmen.data);
         } catch (error) {
             next(error);
         }

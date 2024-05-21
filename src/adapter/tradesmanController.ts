@@ -28,13 +28,9 @@ export default class TradesmanController {
             const userId = (req as any)?.user;
             const images = req.files as IFile[];
 
-            //uploading images to clound
-            const uploadedImages = await Promise.all(
-                images.map(
-                    async (image) =>
-                        await this.cloudinary.saveToCloudinary(image)
-                )
-            );
+            
+            const profile = await this.cloudinary.saveToCloudinary(images[0])
+            const idProof = await this.cloudinary.saveToCloudinary(images[1])
 
             const tradesman = await this.tradesmanUsecase.saveTradesman({
                 name,
@@ -49,8 +45,8 @@ export default class TradesmanController {
                     coordinates: [latitude, longitude],
                     type: "Point",
                 },
-                profile: uploadedImages[0],
-                idProof: uploadedImages[1],
+                profile,
+                idProof
             });
 
             //deleting images from directory after uploading to cloud
