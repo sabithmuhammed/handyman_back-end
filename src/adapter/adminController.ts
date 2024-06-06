@@ -77,7 +77,7 @@ export default class AdminController {
     async getTradesmen(req: Req, res: Res, next: Next) {
         try {
             const page = req.query.page as string | undefined;
-            const pageSize = req.query.page as string | undefined;
+            const pageSize = req.query.pageSize as string | undefined;
             const tradesman = await this.tradesmanUsecase.getTradesmen(
                 page,
                 pageSize
@@ -87,6 +87,23 @@ export default class AdminController {
             next(error);
         }
     }
+
+    async getUsers(req: Req, res: Res, next: Next) {
+        try {
+            const page = req.query.page as string | undefined;
+            const pageSize = req.query.pageSize as string | undefined;
+            
+            
+            const tradesman = await this.userUsecase.getUsers(
+                page,
+                pageSize
+            );
+            return res.status(tradesman.status).json(tradesman.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async userBlock(req: Req, res: Res, next: Next) {
         try {
             const {userId }= req.body;

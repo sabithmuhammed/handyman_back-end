@@ -103,4 +103,11 @@ export default class TradesmanUsecase {
             }
         }
     }
+    async getAllSkills(){
+        const result = await this.tradesmanRepository.getUniqueSkills()
+        return {
+            status:STATUS_CODES.OK,
+            data:result
+        }
+    }
 }

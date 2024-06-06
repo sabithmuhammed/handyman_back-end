@@ -9,6 +9,11 @@ import { STATUS_CODES } from "../infrastructure/constants/httpStatusCodes";
 import ROLES from "../infrastructure/constants/roles";
 import { REFRESH_TOKEN_MAX_AGE } from "../infrastructure/constants/constants";
 import TradesmanUsecase from "../use_case/tradesmanUsecase";
+import { IFile } from "../infrastructure/middlewares/multer";
+import Cloudinary from "../infrastructure/utils/cloudinary";
+import FileOperations from "../infrastructure/utils/fileOperations";
+import ToolUsecase from "../use_case/toolUsecase";
+import Tool from "../domain/tool";
 
 export default class UserController {
     constructor(
@@ -16,7 +21,10 @@ export default class UserController {
         private genOtp: GenerateOtp,
         private sendMail: SendMail,
         private otpUsecase: OtpUsecase,
-        private tradesmanUsecase:TradesmanUsecase
+        private tradesmanUsecase: TradesmanUsecase,
+        private cloudinary: Cloudinary,
+        private fileOperations: FileOperations,
+        private toolUsecase: ToolUsecase
     ) {}
 
     async signUp(req: Req, res: Res, next: Next) {
@@ -161,12 +169,82 @@ export default class UserController {
         }
     }
 
-    async getTradesmen(req: Req, res: Res, next: Next){
+    async getTradesmen(req: Req, res: Res, next: Next) {
         try {
             const page = req.query.page as string | undefined;
             const pageSize = req.query.pageSize as string | undefined;
-            const tradesmen = await this.tradesmanUsecase.getTradesmen(page,pageSize);
+            const tradesmen = await this.tradesmanUsecase.getTradesmen(
+                page,
+                pageSize
+            );
             res.status(tradesmen.status).json(tradesmen.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async addTool(req: Req, res: Res, next: Next) {
+        try {
+            const {
+                name,
+                rent,
+                street,
+                city,
+                state,
+                country,
+                pincode,
+                latitude,
+                longitude,
+            } = req.body;
+            const userId = (req as any)?.user;
+            const imagesRaw = req.files as IFile[];
+            const images = await Promise.all(
+                imagesRaw.map(async (image) => {
+                    return await this.cloudinary.saveToCloudinary(image);
+                })
+            );
+            const tool: Tool = {
+                name,
+                rent,
+                city,
+                country,
+                images,
+                location: {
+                    coordinates: [latitude, longitude],
+                    type: "Point",
+                },
+                pincode,
+                state,
+                street,
+                userId,
+            };
+
+            const data = await this.toolUsecase.addNewTool(tool);
+            //deleting images from directory after uploading to cloud
+            await this.fileOperations.deleteFile(
+                imagesRaw.map(({ path }) => path)
+            );
+            if (data.data) {
+                return res.status(data.status).json(data.data);
+            }
+            return res.status(STATUS_CODES.BAD_REQUEST).json("Invalid data");
+        } catch (error) {
+            next(error);
+        }
+    }
+    async getTools(req: Req, res: Res, next: Next) {
+        try {
+            const tools = await this.toolUsecase.getTools();
+            return res.status(tools.status).json(tools.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getAllSkills(req: Req, res: Res, next: Next) {
+        try {
+            const data = await this.tradesmanUsecase.getAllSkills();
+            return res.status(data.status).json(data.data);
         } catch (error) {
             next(error);
         }

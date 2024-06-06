@@ -40,4 +40,28 @@ export default class UserRepository implements IUserRepository {
         );
         return user;
     }
+    async getAllUsers(
+        page: string | undefined,
+        pageSize: string | undefined
+    ): Promise<{
+        users: User[] | null;
+        totalCount: number;
+        page: number;
+    }> {
+        
+        let users: User[] | null = null;
+        const offset =
+            (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
+        const totalCount = await UserModel.countDocuments({});
+
+        users = await UserModel.find({}, { password: 0 })
+            .skip(offset)
+            .limit(pageSize ? Number(pageSize) : 10);
+
+        return {
+            users,
+            totalCount,
+            page: page ? Number(page) : 1,
+        };
+    }
 }

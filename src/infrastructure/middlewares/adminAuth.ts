@@ -9,13 +9,11 @@ const adminAuth = async (req: Req, res: Res, next: Next) => {
         if (token) {
             
             const accessToken = token.split(" ")[1];
-            console.log(accessToken);
             
             const decoded = jwt.verify(
                 accessToken,
                 process.env.JWT_KEY as string
             ) as JwtPayload;
-            console.log(decoded);
             
             if (decoded.role === ROLES.ADMIN) {
                 next();

@@ -44,6 +44,10 @@ adminRouter.get("/get-tradesmen", adminAuth, (req: Req, res: Res, next: Next) =>
     controller.getTradesmen(req, res, next)
 );
 
+adminRouter.get("/get-users", adminAuth, (req: Req, res: Res, next: Next) =>
+    controller.getUsers(req, res, next)
+);
+
 adminRouter.patch("/block-user", adminAuth, (req: Req, res: Res, next: Next) =>
     controller.userBlock(req, res, next)
 );

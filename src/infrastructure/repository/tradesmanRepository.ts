@@ -83,4 +83,23 @@ export default class TradesmanRepository implements ITradesmanRepository {
         const tradesman = await TradesmanModel.findById(id);
         return tradesman;
     }
+
+    async getUniqueSkills(): Promise<string[]> {
+        const result = await TradesmanModel.aggregate([
+            { $unwind: "$skills" },
+            { $group: { _id: null, uniqueSkills: { $addToSet: "$skills" } } },
+            {
+                $project: {
+                    uniqueSkills: {
+                        $map: {
+                            input: "$uniqueSkills",
+                            as: "skill",
+                            in: { $toString: "$$skill" },
+                        },
+                    },
+                },
+            },
+        ]);
+        return result[0].uniqueSkills;
+    }
 }

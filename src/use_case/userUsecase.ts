@@ -157,4 +157,15 @@ export default class UserUsecase {
             }
         }
     }
+
+    async getUsers(page: string | undefined, pageSize: string| undefined) {
+        const data = await this.userRepository.getAllUsers(
+            page,
+            pageSize
+        );
+        return {
+            status: STATUS_CODES.OK,
+            data,
+        };
+    }
 }

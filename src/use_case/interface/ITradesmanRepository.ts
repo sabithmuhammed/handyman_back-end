@@ -19,6 +19,8 @@ export default interface ITradesmanRepository {
     }>;
     toggleBlock(userId: string, status: boolean): Promise<Tradesman | null>;
     findById(id: string): Promise<Tradesman | null>;
+
+    getUniqueSkills(): Promise<string[]>;
 }
 
 export type VerificationType = "pending" | "verified" | "rejected";
