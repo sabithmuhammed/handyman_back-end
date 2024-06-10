@@ -1,0 +1,36 @@
+import Conversation from "../../domain/conversation";
+import IConversationRepository from "../../use_case/interface/IConversationRepository";
+import ConversationModel from "../database/conversationModel";
+
+export default class ConversationRepository implements IConversationRepository {
+    async createConversation(
+        members: [string, string],
+        tradesmanId: string | null = null
+    ): Promise<Conversation> {
+        const conversation = new ConversationModel({ members, tradesmanId });
+        await conversation.save();
+        return conversation;
+    }
+    async addLastMessage(
+        convoId: string,
+        message: string
+    ): Promise<Conversation> {
+        const conversation = await ConversationModel.findByIdAndUpdate(
+            convoId,
+            {
+                $set: {
+                    lastMessage: message,
+                },
+            },
+            { new: true }
+        );
+        return conversation as Conversation;
+    }
+
+    async checkExist(members: [string, string]): Promise<Conversation | null> {
+        const conversation = await ConversationModel.findOne({
+            members: { $all: members },
+        });
+        return conversation;
+    }
+}
