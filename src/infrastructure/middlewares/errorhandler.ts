@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { STATUS_CODES } from "../constants/httpStatusCodes";
 
 export default function errorHandler(
     err: any,
@@ -9,11 +10,11 @@ export default function errorHandler(
     console.log(err);
     
     if (err.name === "UnauthorizedError") {
-        res.status(401).json("Unauthorized");
+        res.status(STATUS_CODES.UNAUTHORIZED).json("Unauthorized");
         return;
     }
     if (err.name === "ValidationError") {
-        res.status(400).json("Validation Error",
+        res.status(STATUS_CODES.BAD_REQUEST).json("Validation Error",
         );
         return;
     }

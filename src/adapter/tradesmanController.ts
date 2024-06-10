@@ -5,13 +5,16 @@ import TradesmanUsecase from "../use_case/tradesmanUsecase";
 import { IFile } from "../infrastructure/middlewares/multer";
 import Cloudinary from "../infrastructure/utils/cloudinary";
 import FileOperations from "../infrastructure/utils/fileOperations";
+import PostUsecase from "../use_case/postUsecase";
+import { REFRESH_TOKEN_MAX_AGE } from "../infrastructure/constants/constants";
 
 export default class TradesmanController {
     constructor(
         private tradesmanUsecase: TradesmanUsecase,
         private jwtCreate: JwtCreate,
         private cloudinary: Cloudinary,
-        private fileOperations: FileOperations
+        private fileOperations: FileOperations,
+        private postUsecase: PostUsecase
     ) {}
 
     async register(req: Req, res: Res, next: Next) {
@@ -28,9 +31,8 @@ export default class TradesmanController {
             const userId = (req as any)?.user;
             const images = req.files as IFile[];
 
-            
-            const profile = await this.cloudinary.saveToCloudinary(images[0])
-            const idProof = await this.cloudinary.saveToCloudinary(images[1])
+            const profile = await this.cloudinary.saveToCloudinary(images[0]);
+            const idProof = await this.cloudinary.saveToCloudinary(images[1]);
 
             const tradesman = await this.tradesmanUsecase.saveTradesman({
                 name,
@@ -46,7 +48,7 @@ export default class TradesmanController {
                     type: "Point",
                 },
                 profile,
-                idProof
+                idProof,
             });
 
             //deleting images from directory after uploading to cloud
@@ -66,7 +68,51 @@ export default class TradesmanController {
             const tradesman = await this.tradesmanUsecase.checkExistByUserId(
                 userId
             );
+
+            if (tradesman.refreshToken) {
+                res.cookie("refresh_token", tradesman.refreshToken, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV !== "development",
+                    sameSite:
+                        process.env.NODE_ENV !== "development"
+                            ? "none"
+                            : "strict",
+                    maxAge: REFRESH_TOKEN_MAX_AGE,
+                });
+            }
+
             res.status(tradesman.status).json(tradesman.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getPost(req: Req, res: Res, next: Next) {
+        try {
+            const tradesmanId = (req as any)?.tradesman;
+            const posts = await this.postUsecase.getPosts(tradesmanId);
+            res.status(posts.status).json(posts.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async addPost(req: Req, res: Res, next: Next) {
+        try {
+            const tradesmanId = (req as any)?.tradesman;
+            let { text = "" } = req.body;
+            const images = req.files as IFile[];
+            let image = "";
+            if (images) {
+                image = await this.cloudinary.saveToCloudinary(images[0]);
+            }
+            const post = await this.postUsecase.addNewPost({
+                text: text,
+                image: image,
+                date: new Date(),
+                tradesmanId,
+            });
+            res.status(post.status).json(post.data);
         } catch (error) {
             next(error);
         }

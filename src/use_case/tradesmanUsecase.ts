@@ -27,11 +27,25 @@ export default class TradesmanUsecase {
         const tradesman = await this.tradesmanRepository.findByUserId(userId);
         if (tradesman) {
             if (tradesman.verificationStatus == "verified") {
+                const accessToken = this.jwtCreate.generateAccessToken(
+                    tradesman._id as string,
+                    ROLES.TRADESMAN
+                );
+                const refreshToken = this.jwtCreate.generateRefreshToken(
+                    tradesman._id as string,
+                    ROLES.TRADESMAN
+                );
                 return {
                     status: STATUS_CODES.OK,
                     data: {
                         status: "Verified",
+                        data: {
+                            name: tradesman.name,
+                            profile: tradesman.profile,
+                            accessToken,
+                        },
                     },
+                    refreshToken,
                 };
             } else if (tradesman.verificationStatus == "rejected") {
                 return {
@@ -44,7 +58,7 @@ export default class TradesmanUsecase {
             return {
                 status: STATUS_CODES.OK,
                 data: {
-                    status: "pending",
+                    status: "Not verified",
                 },
             };
         }
@@ -82,7 +96,7 @@ export default class TradesmanUsecase {
         }
     }
 
-    async getTradesmen(page: string | undefined, pageSize: string| undefined) {
+    async getTradesmen(page: string | undefined, pageSize: string | undefined) {
         const data = await this.tradesmanRepository.getAllTradesman(
             page,
             pageSize
@@ -92,22 +106,25 @@ export default class TradesmanUsecase {
             data,
         };
     }
-    async toggleBlock(userId:string,status:boolean){
-        const tradesman = await this.tradesmanRepository.toggleBlock(userId,status);
-        if(tradesman){
+    async toggleBlock(userId: string, status: boolean) {
+        const tradesman = await this.tradesmanRepository.toggleBlock(
+            userId,
+            status
+        );
+        if (tradesman) {
             return {
-                status:STATUS_CODES.OK,
-                data:{
-                    status:"success"
-                }
-            }
+                status: STATUS_CODES.OK,
+                data: {
+                    status: "success",
+                },
+            };
         }
     }
-    async getAllSkills(){
-        const result = await this.tradesmanRepository.getUniqueSkills()
+    async getAllSkills() {
+        const result = await this.tradesmanRepository.getUniqueSkills();
         return {
-            status:STATUS_CODES.OK,
-            data:result
-        }
+            status: STATUS_CODES.OK,
+            data: result,
+        };
     }
 }
