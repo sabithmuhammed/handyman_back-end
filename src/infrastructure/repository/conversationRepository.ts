@@ -11,6 +11,7 @@ export default class ConversationRepository implements IConversationRepository {
         await conversation.save();
         return conversation;
     }
+
     async addLastMessage(
         convoId: string,
         message: string
@@ -32,5 +33,11 @@ export default class ConversationRepository implements IConversationRepository {
             members: { $all: members },
         });
         return conversation;
+    }
+    async getAllConversation(userId: string): Promise<Conversation[]> {
+        const conversations = await ConversationModel.find({
+            members: { $in: [userId] },
+        }).sort({ updatedAt: -1 });
+        return conversations;
     }
 }

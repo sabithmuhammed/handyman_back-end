@@ -12,6 +12,7 @@ import tradesmanRouter from "../router/tradesmanRoute";
 import adminRouter from "../router/adminRoute";
 
 import errorHandler from "../middlewares/errorhandler";
+import chatRouter from "../router/chatRoute";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -47,6 +48,7 @@ app.use("/api/users", userRouter);
 app.use("/api/common", commonRouter);
 app.use("/api/tradesman", tradesmanRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/chat", chatRouter);
 
 app.use(errorHandler);
 

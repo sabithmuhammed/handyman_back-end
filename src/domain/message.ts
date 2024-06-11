@@ -5,8 +5,12 @@ export default interface Message {
     id?: string;
     conversationId: ObjectId;
     senderId: ObjectId;
+    receiverId: ObjectId;
     message: {
-        type: ["audio", "image", "text"];
+        type: "audio" | "image" | "text";
         content: string;
     };
+    status: "sent" | "recieved" | "seen";
+    createdAt?: Date;
+    updatedAt?: Date;
 }

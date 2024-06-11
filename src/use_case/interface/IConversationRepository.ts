@@ -7,4 +7,5 @@ export default interface IConversationRepository {
     ): Promise<Conversation>;
     checkExist(members: [string, string]): Promise<Conversation | null>;
     addLastMessage(convoId: string, message: string): Promise<Conversation>;
+    getAllConversation(userId: string): Promise<Conversation[]>;
 }

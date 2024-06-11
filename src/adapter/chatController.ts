@@ -1,0 +1,71 @@
+import { Req, Res, Next } from "../infrastructure/types/expressTypes";
+import { STATUS_CODES } from "../infrastructure/constants/httpStatusCodes";
+import ChatUsecase from "../use_case/chatUsecase";
+import Message from "../domain/message";
+// import { IFile } from "../infrastructure/middlewares/multer";
+// import Cloudinary from "../infrastructure/utils/cloudinary";
+// import FileOperations from "../infrastructure/utils/fileOperations";
+
+export default class ChatController {
+    constructor(
+        private chatUsecase: ChatUsecase // private cloudinary: Cloudinary, // private fileOperations: FileOperations,
+    ) {}
+
+    async getAllConversations(req: Req, res: Res, next: Next) {
+        try {
+            const senderId = (req as any)?.senderId;
+            const result = await this.chatUsecase.getAllConversations(senderId);
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async addConversation(req: Req, res: Res, next: Next) {
+        try {
+            const { user, tradesman = null } = req.body;
+            const senderId = (req as any)?.senderId;
+            const result = await this.chatUsecase.createNewConversation(
+                [senderId, user],
+                tradesman
+            );
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async addMessage(req: Req, res: Res, next: Next) {
+        try {
+            const { receiverId, conversationId } = req.body;
+            let content = req.body.text;
+            const senderId = (req as any)?.senderId;
+            const message: Message = {
+                conversationId,
+                message: {
+                    type: "text",
+                    content,
+                },
+                receiverId,
+                senderId,
+                status: "sent",
+            };
+            const result = await this.chatUsecase.saveNewMessage(message);
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getAllMessages(req: Req, res: Res, next: Next) {
+        try {
+            const { conversationId } = req.body;
+            const result = await this.chatUsecase.getAllMessages(
+                conversationId
+            );
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+}

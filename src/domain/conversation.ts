@@ -4,7 +4,8 @@ export default interface Conversation {
     _id?: string;
     id?: string;
     members: [string, string];
-    timestamps: Date;
     lastMessage: string;
-    tradesmanId: ObjectId | null;
+    tradesmanId?: ObjectId | null;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
