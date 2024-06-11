@@ -33,6 +33,8 @@ const controller = new TradesmanController(
     postUsecase
 );
 
+
+
 tradesmanRouter.post(
     "/register",
     Multer.array("images"),
@@ -52,11 +54,21 @@ tradesmanRouter.get(
     (req: Req, res: Res, next: Next) => controller.getPost(req, res, next)
 );
 
+tradesmanRouter.get(
+    "/get-posts-id/:tradesmanId",
+    (req: Req, res: Res, next: Next) => controller.getPostsById(req, res, next)
+);
+
 tradesmanRouter.post(
     "/add-post",
     tradesmanAuth,
     Multer.array('images'),
     (req: Req, res: Res, next: Next) => controller.addPost(req, res, next)
+);
+
+tradesmanRouter.get(
+    "/get-profile/:tradesmanId",
+    (req: Req, res: Res, next: Next) => controller.getProfileMinimum(req, res, next)
 );
 
 export default tradesmanRouter;

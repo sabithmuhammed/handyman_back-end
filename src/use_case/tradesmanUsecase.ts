@@ -127,4 +127,37 @@ export default class TradesmanUsecase {
             data: result,
         };
     }
+
+    async getProfileMinimum(id: string) {
+        let result = await this.tradesmanRepository.findById(id);
+        if (result) {
+            const {
+                _id,
+                name,
+                profile,
+                experience,
+                location,
+                skills,
+                wage,
+                rating,
+            } = result;
+            return {
+                status: STATUS_CODES.OK,
+                data: {
+                    _id,
+                    name,
+                    profile,
+                    experience,
+                    location,
+                    skills,
+                    wage,
+                    rating,
+                },
+            };
+        }
+        return {
+            status: STATUS_CODES.OK,
+            data: null,
+        };
+    }
 }

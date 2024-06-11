@@ -7,6 +7,7 @@ import Cloudinary from "../infrastructure/utils/cloudinary";
 import FileOperations from "../infrastructure/utils/fileOperations";
 import PostUsecase from "../use_case/postUsecase";
 import { REFRESH_TOKEN_MAX_AGE } from "../infrastructure/constants/constants";
+import { NextFunction } from "express";
 
 export default class TradesmanController {
     constructor(
@@ -97,6 +98,18 @@ export default class TradesmanController {
         }
     }
 
+    async getPostsById(req: Req, res: Res, next: NextFunction) {
+        try {
+            const { tradesmanId } = req.params;
+            const posts = await this.postUsecase.getPosts(tradesmanId);
+            console.log(posts,tradesmanId);
+            
+            res.status(posts.status).json(posts.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async addPost(req: Req, res: Res, next: Next) {
         try {
             const tradesmanId = (req as any)?.tradesman;
@@ -113,6 +126,18 @@ export default class TradesmanController {
                 tradesmanId,
             });
             res.status(post.status).json(post.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getProfileMinimum(req: Req, res: Res, next: Next) {
+        try {
+            const tradesmanId = req.params.tradesmanId;
+            const result = await this.tradesmanUsecase.getProfileMinimum(
+                tradesmanId
+            );
+            res.status(result.status).json(result.data);
         } catch (error) {
             next(error);
         }

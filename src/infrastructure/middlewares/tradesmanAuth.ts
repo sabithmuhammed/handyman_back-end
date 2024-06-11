@@ -21,7 +21,7 @@ const tradesmanAuth = async (req: Req, res: Res, next: Next) => {
                     decoded.userId
                 );
                 if (tradesman) {
-                    (req as any).tradesman = tradesman.userId as string;
+                    (req as any).tradesman = tradesman._id as string;
                     next();
                     return;
                 }
