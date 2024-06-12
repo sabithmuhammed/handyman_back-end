@@ -59,7 +59,7 @@ export default class ChatController {
 
     async getAllMessages(req: Req, res: Res, next: Next) {
         try {
-            const { conversationId } = req.body;
+            const { conversationId } = req.params;
             const result = await this.chatUsecase.getAllMessages(
                 conversationId
             );

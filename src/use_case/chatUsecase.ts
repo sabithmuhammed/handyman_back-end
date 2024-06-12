@@ -47,7 +47,7 @@ export default class ChatUsecase {
         );
         return {
             status: STATUS_CODES.OK,
-            data: conversation,
+            data: newMessage,
         };
     }
 

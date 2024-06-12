@@ -34,7 +34,7 @@ export default class AdminController {
                 const user = await this.userUsecase.getUserById(
                     tradesman.data.userId as string
                 );
-                if (user) {
+                if (typeof user.data !== "string") {
                     this.sendMail.sendVerifyMail(
                         user.data?.email as string,
                         tradesman.data.name
@@ -60,7 +60,7 @@ export default class AdminController {
                 const user = await this.userUsecase.getUserById(
                     tradesman.data.userId as string
                 );
-                if (user) {
+                if (typeof user.data !== "string") {
                     this.sendMail.sendRejectMail(
                         user.data?.email as string,
                         tradesman.data.name
@@ -92,12 +92,8 @@ export default class AdminController {
         try {
             const page = req.query.page as string | undefined;
             const pageSize = req.query.pageSize as string | undefined;
-            
-            
-            const tradesman = await this.userUsecase.getUsers(
-                page,
-                pageSize
-            );
+
+            const tradesman = await this.userUsecase.getUsers(page, pageSize);
             return res.status(tradesman.status).json(tradesman.data);
         } catch (error) {
             next(error);
@@ -106,7 +102,7 @@ export default class AdminController {
 
     async userBlock(req: Req, res: Res, next: Next) {
         try {
-            const {userId }= req.body;
+            const { userId } = req.body;
             const user = await this.userUsecase.toggleBlock(userId, true);
             if (user) {
                 return res.status(user.status).json(user.data);
@@ -118,7 +114,7 @@ export default class AdminController {
     }
     async userUnblock(req: Req, res: Res, next: Next) {
         try {
-            const {userId} = req.body;
+            const { userId } = req.body;
             const user = await this.userUsecase.toggleBlock(userId, false);
             if (user) {
                 return res.status(user.status).json(user.data);
@@ -130,24 +126,34 @@ export default class AdminController {
     }
     async tradesmanBlock(req: Req, res: Res, next: Next) {
         try {
-            const {tradesmanId }= req.body;
-            const tradesman = await this.tradesmanUsecase.toggleBlock(tradesmanId, true);
+            const { tradesmanId } = req.body;
+            const tradesman = await this.tradesmanUsecase.toggleBlock(
+                tradesmanId,
+                true
+            );
             if (tradesman) {
                 return res.status(tradesman.status).json(tradesman.data);
             }
-            return res.status(STATUS_CODES.NOT_FOUND).json("Tradesman not found");
+            return res
+                .status(STATUS_CODES.NOT_FOUND)
+                .json("Tradesman not found");
         } catch (error) {
             next(error);
         }
     }
     async tradesmanUnblock(req: Req, res: Res, next: Next) {
         try {
-            const {tradesmanId} = req.body;
-            const tradesman = await this.tradesmanUsecase.toggleBlock(tradesmanId, false);
+            const { tradesmanId } = req.body;
+            const tradesman = await this.tradesmanUsecase.toggleBlock(
+                tradesmanId,
+                false
+            );
             if (tradesman) {
                 return res.status(tradesman.status).json(tradesman.data);
             }
-            return res.status(STATUS_CODES.NOT_FOUND).json("Tradesman not found");
+            return res
+                .status(STATUS_CODES.NOT_FOUND)
+                .json("Tradesman not found");
         } catch (error) {
             next(error);
         }

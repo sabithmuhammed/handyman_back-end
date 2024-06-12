@@ -43,6 +43,7 @@ export default class TradesmanUsecase {
                             name: tradesman.name,
                             profile: tradesman.profile,
                             accessToken,
+                            tradesmanId: tradesman._id,
                         },
                     },
                     refreshToken,

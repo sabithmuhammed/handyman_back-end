@@ -35,7 +35,7 @@ chatRouter.post(
 );
 
 chatRouter.get(
-    "/get-messages",
+    "/get-messages/:conversationId",
     userAuth,
     (req: Req, res: Res, next: Next) =>
         chatController.getAllMessages(req, res, next)

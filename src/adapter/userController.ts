@@ -249,4 +249,14 @@ export default class UserController {
             next(error);
         }
     }
+
+    async getUserInfo(req: Req, res: Res, next: Next) {
+        try {
+            const { userId } = req.params;
+            const data = await this.userUsecase.getUserById(userId);
+            return res.status(data.status).json(data.data);
+        } catch (error) {
+            next(error);
+        }
+    }
 }

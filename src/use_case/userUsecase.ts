@@ -62,6 +62,7 @@ export default class UserUsecase {
                             name: userFound.name,
                             email: userFound.email,
                             isTradesman: userFound.isTradesman,
+                            userId:userFound._id
                         },
                         accessToken,
                         isAdmin: false,
@@ -100,6 +101,7 @@ export default class UserUsecase {
                         name: userFound.name,
                         email: userFound.email,
                         isTradesman: userFound.isTradesman,
+                        userId:userFound._id
                     },
                     accessToken,
                 },
@@ -145,6 +147,10 @@ export default class UserUsecase {
                 data: userFound,
             };
         }
+        return {
+            status: STATUS_CODES.NOT_FOUND,
+            data: "User not found",
+        };
     }
     async toggleBlock(userId:string,status:boolean){
         const user = await this.userRepository.toggleBlock(userId,status);

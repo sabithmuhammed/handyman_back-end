@@ -3,7 +3,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import session, { SessionOptions } from "express-session";
 import http from "http";
-import morgan from "morgan"
+import morgan from "morgan";
 
 //route imports
 import userRouter from "../router/userRoute";
@@ -13,10 +13,11 @@ import adminRouter from "../router/adminRoute";
 
 import errorHandler from "../middlewares/errorhandler";
 import chatRouter from "../router/chatRoute";
+import initializeSocket from "./socketServer";
 
 const app = express();
 const httpServer = http.createServer(app);
-app.use(morgan("dev"))
+app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -52,4 +53,5 @@ app.use("/api/chat", chatRouter);
 
 app.use(errorHandler);
 
+initializeSocket(httpServer);
 export { httpServer };
