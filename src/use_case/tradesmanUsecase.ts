@@ -1,9 +1,10 @@
+import { config } from "dotenv";
 import Tradesman from "../domain/tradesman";
 import { STATUS_CODES } from "../infrastructure/constants/httpStatusCodes";
 import ROLES from "../infrastructure/constants/roles";
 import TradesmanRepository from "../infrastructure/repository/tradesmanRepository";
 import JwtCreate from "../infrastructure/utils/jwtCreate";
-import { VerificationType } from "./interface/ITradesmanRepository";
+import { ConfigurationType, FilterType, VerificationType } from "./interface/ITradesmanRepository";
 
 export default class TradesmanUsecase {
     constructor(
@@ -72,7 +73,8 @@ export default class TradesmanUsecase {
     }
 
     async getPendingVerifications() {
-        const tradesmen = await this.tradesmanRepository.getASllPending();
+        const tradesmen =
+            await this.tradesmanRepository.getAllPendingTradesmen();
 
         return {
             status: STATUS_CODES.OK,
@@ -97,10 +99,15 @@ export default class TradesmanUsecase {
         }
     }
 
-    async getTradesmen(page: string | undefined, pageSize: string | undefined) {
-        const data = await this.tradesmanRepository.getAllTradesman(
+    async getTradesmen(
+        page: number | undefined,
+        pageSize: number | undefined,
+        filters: FilterType
+    ) {
+        const data = await this.tradesmanRepository.getAllTradesmanWithFilter(
             page,
-            pageSize
+            pageSize,
+            filters
         );
         return {
             status: STATUS_CODES.OK,
@@ -138,9 +145,9 @@ export default class TradesmanUsecase {
                 profile,
                 experience,
                 location,
-                skills,
-                wage,
+                category,
                 rating,
+                configuration
             } = result;
             return {
                 status: STATUS_CODES.OK,
@@ -150,15 +157,47 @@ export default class TradesmanUsecase {
                     profile,
                     experience,
                     location,
-                    skills,
-                    wage,
+                    category,
                     rating,
+                    configuration
                 },
             };
         }
         return {
             status: STATUS_CODES.OK,
             data: null,
+        };
+    }
+
+    async getAllTradesmen(
+        page: number | undefined,
+        pageSize: number | undefined,
+        filters: { category: string }
+    ) {
+        const data = await this.tradesmanRepository.getAllTradesman(
+            page,
+            pageSize,
+            filters
+        );
+        return {
+            status: STATUS_CODES.OK,
+            data,
+        };
+    }
+
+    async getProfileFull(tradesmanId: string) {
+        const data = await this.tradesmanRepository.getProfileFull(tradesmanId);
+        return {
+            status: STATUS_CODES.OK,
+            data,
+        };
+    }
+
+    async updateConfiguration(tradesmanId: string,config:ConfigurationType) {
+        const data = await this.tradesmanRepository.updateConfiguration(tradesmanId,config);
+        return {
+            status: STATUS_CODES.OK,
+            data,
         };
     }
 }

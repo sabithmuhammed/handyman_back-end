@@ -62,7 +62,8 @@ export default class UserUsecase {
                             name: userFound.name,
                             email: userFound.email,
                             isTradesman: userFound.isTradesman,
-                            userId:userFound._id
+                            profile: userFound?.profile || "",
+                            userId: userFound._id,
                         },
                         accessToken,
                         isAdmin: false,
@@ -72,7 +73,7 @@ export default class UserUsecase {
             }
         }
         return {
-            status: STATUS_CODES.UNAUTHORIZED,
+            status: STATUS_CODES.BAD_REQUEST,
             data: "Incorrect email or password",
         };
     }
@@ -101,7 +102,7 @@ export default class UserUsecase {
                         name: userFound.name,
                         email: userFound.email,
                         isTradesman: userFound.isTradesman,
-                        userId:userFound._id
+                        userId: userFound._id,
                     },
                     accessToken,
                 },
@@ -123,9 +124,10 @@ export default class UserUsecase {
     }
 
     async changePassword(email: string, password: string) {
+        const hashedPassword = await this.encrypt.createHash(password);
         const userUpdate = await this.userRepository.updatePassword(
             email,
-            password
+            hashedPassword
         );
         if (!userUpdate) {
             return {
@@ -152,26 +154,65 @@ export default class UserUsecase {
             data: "User not found",
         };
     }
-    async toggleBlock(userId:string,status:boolean){
-        const user = await this.userRepository.toggleBlock(userId,status);
-        if(user){
+    async toggleBlock(userId: string, status: boolean) {
+        const user = await this.userRepository.toggleBlock(userId, status);
+        if (user) {
             return {
-                status:STATUS_CODES.OK,
-                data:{
-                    status:"success"
-                }
-            }
+                status: STATUS_CODES.OK,
+                data: {
+                    status: "success",
+                },
+            };
         }
     }
 
-    async getUsers(page: string | undefined, pageSize: string| undefined) {
-        const data = await this.userRepository.getAllUsers(
-            page,
-            pageSize
-        );
+    async getUsers(page: string | undefined, pageSize: string | undefined) {
+        const data = await this.userRepository.getAllUsers(page, pageSize);
         return {
             status: STATUS_CODES.OK,
             data,
+        };
+    }
+
+    async updateUserProfile(id: string, name: string, profile: string) {
+        const userInfo = await this.userRepository.updateProfile(
+            id,
+            name,
+            profile
+        );
+        return {
+            status: STATUS_CODES.OK,
+            data: {
+                userData: {
+                    name: userInfo.name,
+                    email: userInfo.email,
+                    isTradesman: userInfo.isTradesman,
+                    profile: userInfo?.profile || "",
+                    userId: userInfo._id,
+                },
+            },
+        };
+    }
+
+    async changeUserToTradesman(id: string) {
+        const result = await this.userRepository.ChangeUserToTradesman(id);
+        if (result) {
+            return {
+                status: STATUS_CODES.OK,
+                data: {
+                    userData: {
+                        name: result.name,
+                        email: result.email,
+                        isTradesman: result.isTradesman,
+                        profile: result?.profile || "",
+                        userId: result._id,
+                    },
+                },
+            };
+        }
+        return {
+            status: STATUS_CODES.NOT_FOUND,
+            data: "User not found",
         };
     }
 }

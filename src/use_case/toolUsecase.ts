@@ -22,4 +22,11 @@ export default class ToolUsecase{
             data:tools
         }
     }
+    async getMyTools(userId:string){
+        const tools = await this.toolRepository.getMyTools(userId)
+        return {
+            status:STATUS_CODES.OK,
+            data:tools
+        }
+    }
 }

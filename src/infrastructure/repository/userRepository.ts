@@ -48,7 +48,6 @@ export default class UserRepository implements IUserRepository {
         totalCount: number;
         page: number;
     }> {
-        
         let users: User[] | null = null;
         const offset =
             (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
@@ -63,5 +62,37 @@ export default class UserRepository implements IUserRepository {
             totalCount,
             page: page ? Number(page) : 1,
         };
+    }
+    async updateProfile(
+        id: string,
+        name: string,
+        profile: string
+    ): Promise<User> {
+        const user = await UserModel.findByIdAndUpdate(
+            id,
+            {
+                $set: {
+                    name,
+                    profile,
+                },
+            },
+            { new: true }
+        );
+        return user as User;
+    }
+
+    async ChangeUserToTradesman(id: string): Promise<User | null> {
+        const user = await UserModel.findByIdAndUpdate(
+            id,
+            {
+                $set: {
+                    isTradesman: true,
+                },
+            },
+            { new: true }
+        );
+        console.log(user,"checking change");
+        
+        return user;
     }
 }

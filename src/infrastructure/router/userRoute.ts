@@ -75,6 +75,10 @@ route.get("/get-tradesmen", (req, res, next) =>
     controller.getTradesmen(req, res, next)
 );
 
+route.get("/get-all-tradesmen", (req, res, next) =>
+    controller.getAllTradesmen(req, res, next)
+);
+
 route.post("/add-tool", Multer.array("images"), userAuth, (req, res, next) =>
     controller.addTool(req, res, next)
 );
@@ -83,12 +87,20 @@ route.get("/get-tools", (req, res, next) =>
     controller.getTools(req, res, next)
 );
 
+route.get("/get-my-tools", (req, res, next) =>
+    controller.getMyTools(req, res, next)
+);
+
 route.get("/get-user-info/:userId", (req, res, next) =>
     controller.getUserInfo(req, res, next)
 );
 
 route.get("/get-skills", (req, res, next) =>
     controller.getAllSkills(req, res, next)
+);
+
+route.patch("/update-user", userAuth, Multer.single("image"), (req, res, next) =>
+    controller.updateUserData(req, res, next)
 );
 
 export default route;

@@ -1,6 +1,8 @@
 import Tradesman from "../../domain/tradesman";
 import TradesmanModel from "../database/tradesmanModel";
 import ITradesmanRepository, {
+    ConfigurationType,
+    FilterType,
     VerificationType,
 } from "../../use_case/interface/ITradesmanRepository";
 
@@ -14,7 +16,7 @@ export default class TradesmanRepository implements ITradesmanRepository {
         const tradesman = await TradesmanModel.findOne({ userId });
         return tradesman;
     }
-    async getASllPending(): Promise<Tradesman[] | null> {
+    async getAllPendingTradesmen(): Promise<Tradesman[] | null> {
         const tradesmen = await TradesmanModel.find({
             verificationStatus: "pending",
         });
@@ -39,9 +41,10 @@ export default class TradesmanRepository implements ITradesmanRepository {
         return tradesman;
     }
 
-    async getAllTradesman(
-        page: string | undefined,
-        pageSize: string | undefined
+    async getAllTradesmanWithFilter(
+        page: number | undefined,
+        pageSize: number | undefined,
+        filters: FilterType
     ): Promise<{
         tradesmen: Tradesman[] | null;
         totalCount: number;
@@ -52,10 +55,21 @@ export default class TradesmanRepository implements ITradesmanRepository {
             (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
         const totalCount = await TradesmanModel.countDocuments({
             verificationStatus: "verified",
+            skills: { $regex: ".*" + filters.category + ".*", $options: "i" },
         });
 
         tradesmen = await TradesmanModel.find({
             verificationStatus: "verified",
+            category: { $regex: ".*" + filters.category + ".*", $options: "i" },
+            location: {
+                $near: {
+                    $geometry: {
+                        type: "Point",
+                        coordinates: filters.coordinates,
+                    },
+                    $maxDistance: 10000,
+                },
+            },
         })
             .skip(offset)
             .limit(pageSize ? Number(pageSize) : 10);
@@ -86,8 +100,7 @@ export default class TradesmanRepository implements ITradesmanRepository {
 
     async getUniqueSkills(): Promise<string[]> {
         const result = await TradesmanModel.aggregate([
-            { $unwind: "$skills" },
-            { $group: { _id: null, uniqueSkills: { $addToSet: "$skills" } } },
+            { $group: { _id: null, uniqueSkills: { $addToSet: "$category" } } },
             {
                 $project: {
                     uniqueSkills: {
@@ -100,6 +113,59 @@ export default class TradesmanRepository implements ITradesmanRepository {
                 },
             },
         ]);
-        return result[0].uniqueSkills;
+        if (result[0]) {
+            return result[0].uniqueSkills;
+        }
+        return [];
+    }
+
+    async getAllTradesman(
+        page: number | undefined,
+        pageSize: number | undefined,
+        filters: { category: string }
+    ): Promise<{
+        tradesmen: Tradesman[] | null;
+        totalCount: number;
+        page: number;
+    }> {
+        let tradesmen: Tradesman[] | null = null;
+        const offset =
+            (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
+        const totalCount = await TradesmanModel.countDocuments({
+            verificationStatus: "verified",
+            category: { $regex: ".*" + filters.category + ".*", $options: "i" },
+        });
+
+        tradesmen = await TradesmanModel.find({
+            verificationStatus: "verified",
+            skills: { $regex: ".*" + filters.category + ".*", $options: "i" },
+        })
+            .skip(offset)
+            .limit(pageSize ? Number(pageSize) : 10);
+
+        return {
+            tradesmen,
+            totalCount,
+            page: page ? Number(page) : 1,
+        };
+    }
+    async getProfileFull(tradesmanId: string): Promise<Tradesman | null> {
+        const tradesman = await TradesmanModel.findById(tradesmanId);
+        return tradesman;
+    }
+    async updateConfiguration(
+        tradesmanId: string,
+        config: ConfigurationType
+    ): Promise<Tradesman | null> {
+        const tradesman = await TradesmanModel.findByIdAndUpdate(
+            tradesmanId,
+            {
+                $set: {
+                    configuration: config,
+                },
+            },
+            { new: true }
+        );
+        return tradesman
     }
 }

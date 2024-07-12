@@ -171,11 +171,15 @@ export default class UserController {
 
     async getTradesmen(req: Req, res: Res, next: Next) {
         try {
-            const page = req.query.page as string | undefined;
-            const pageSize = req.query.pageSize as string | undefined;
+            const { page, pageSize, longitude, latitude, category } = req.query;
+
             const tradesmen = await this.tradesmanUsecase.getTradesmen(
-                page,
-                pageSize
+                Number(page),
+                Number(pageSize),
+                {
+                    category: category as string,
+                    coordinates: [Number(longitude), Number(latitude)],
+                }
             );
             res.status(tradesmen.status).json(tradesmen.data);
         } catch (error) {
@@ -241,6 +245,16 @@ export default class UserController {
         }
     }
 
+    async getMyTools(req: Req, res: Res, next: Next) {
+        try {
+            const userId = (req as any)?.user;
+            const tools = await this.toolUsecase.getMyTools(userId);
+            return res.status(tools.status).json(tools.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async getAllSkills(req: Req, res: Res, next: Next) {
         try {
             const data = await this.tradesmanUsecase.getAllSkills();
@@ -255,6 +269,44 @@ export default class UserController {
             const { userId } = req.params;
             const data = await this.userUsecase.getUserById(userId);
             return res.status(data.status).json(data.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async updateUserData(req: Req, res: Res, next: Next) {
+        try {
+            let { name, profile } = req.body;
+            const userId = (req as any)?.user;
+            const image = req.file;
+            if (image) {
+                profile = await this.cloudinary.saveToCloudinary(image);
+                await this.fileOperations.deleteFile(image.path);
+            }
+
+            const data = await this.userUsecase.updateUserProfile(
+                userId,
+                name,
+                profile
+            );
+            res.status(data.status).json(data.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getAllTradesmen(req: Req, res: Res, next: Next) {
+        try {
+            const { page, pageSize, longitude, category } = req.query;
+
+            const tradesmen = await this.tradesmanUsecase.getAllTradesmen(
+                Number(page),
+                Number(pageSize),
+                {
+                    category: category as string,
+                }
+            );
+            res.status(tradesmen.status).json(tradesmen.data);
         } catch (error) {
             next(error);
         }

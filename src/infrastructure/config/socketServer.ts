@@ -13,7 +13,7 @@ export default function initializeSocket(server: any) {
         cors: {
             origin: process.env.CORS_URL,
             methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
-            credentials:true
+            credentials: true,
         },
     });
 
@@ -28,7 +28,6 @@ export default function initializeSocket(server: any) {
             users.push({ userId, socketId, online: true });
         }
         console.log(users);
-        
 
         io.emit("userOnline", userId);
     };
@@ -44,44 +43,17 @@ export default function initializeSocket(server: any) {
         users.find((user) => user.userId === userId);
 
     io.on("connection", (socket: Socket) => {
-        console.log("user connected", socket.id);
-
-        socket.on("addUser", ({userId}) => {
-            addUser(userId, socket.id);
-        });
+        const userId = socket.handshake.query.userId;
+        addUser(userId as string, socket.id);
+        console.log(`User connected with ID: ${userId}`);
+        
         socket.on("sendMessage", (message) => {
-            console.log(message);
-            
             const user = getUser(message.receiverId);
             console.log(user);
-            
-            if (user) {
 
+            if (user) {
                 io.to(user.socketId).emit("newMessage", message);
             }
         });
-
-        // socket.on("sendMessage",({senderId,receiverId,text}) =>{
-        //     console.log('senddddddddd',senderId,receiverId,text)
-        //     const user = getUser(receiverId)
-        //     console.log(user);
-
-        //     if(user){
-        //         io.to(user.socketId).emit("getMessage",{senderId,text})
-        //     }
-        // });
-
-        // socket.on('image',(imageData:object) =>{
-        //     console.log("recieved image data",imageData);
-        //     socket.broadcast.emit("image",imageData)
-
-        // })
-
-        // socket.on("disconnect",() =>{
-        //     console.log("user disconnected")
-        //     removeUser(socket.id).catch(err =>console.log('error during removal of user'));
-        //     io.emit("userOnline",users.filter(user =>user.online))
-
-        // })
     });
 }

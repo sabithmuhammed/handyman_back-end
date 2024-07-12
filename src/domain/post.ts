@@ -8,5 +8,4 @@ export default interface Post {
     date: Date;
     tradesmanId: ObjectId;
     likes?: object[];
-    comments?: object[];
 }

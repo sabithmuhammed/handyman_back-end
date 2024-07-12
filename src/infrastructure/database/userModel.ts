@@ -10,6 +10,10 @@ const UserSchema: Schema = new Schema<User | Document>({
         type: String,
         required: true,
     },
+    profile: {
+        type: String,
+        default:""
+    },
     password: {
         type: String,
     },

@@ -22,15 +22,11 @@ const fileOperations = new FileOperations();
 const tradesmanRepository = new TradesmanRepository();
 const tradesmanUsecase = new TradesmanUsecase(tradesmanRepository, jwtCreate);
 
-const postRepository = new PostRepository();
-const postUsecase = new PostUsecase(postRepository);
 
 const controller = new TradesmanController(
     tradesmanUsecase,
-    jwtCreate,
     cloudinary,
     fileOperations,
-    postUsecase
 );
 
 
@@ -48,27 +44,23 @@ tradesmanRouter.get(
         controller.tradesmanExistCheck(req, res, next)
 );
 
-tradesmanRouter.get(
-    "/get-posts",
-    tradesmanAuth,
-    (req: Req, res: Res, next: Next) => controller.getPost(req, res, next)
-);
-
-tradesmanRouter.get(
-    "/get-posts-id/:tradesmanId",
-    (req: Req, res: Res, next: Next) => controller.getPostsById(req, res, next)
-);
-
-tradesmanRouter.post(
-    "/add-post",
-    tradesmanAuth,
-    Multer.array('images'),
-    (req: Req, res: Res, next: Next) => controller.addPost(req, res, next)
-);
 
 tradesmanRouter.get(
     "/get-profile/:tradesmanId",
     (req: Req, res: Res, next: Next) => controller.getProfileMinimum(req, res, next)
 );
+
+tradesmanRouter.get(
+    "/get-profile-full",
+    tradesmanAuth,
+    (req: Req, res: Res, next: Next) => controller.getProfileFull(req, res, next)
+);
+
+tradesmanRouter.patch(
+    "/update-configuration",
+    tradesmanAuth,
+    (req: Req, res: Res, next: Next) => controller.updateConfiguration(req, res, next)
+);
+
 
 export default tradesmanRouter;

@@ -14,4 +14,6 @@ export default interface IUserRepository {
         totalCount: number;
         page: number;
     }>;
+    updateProfile(id: string, name: string, profile: string): Promise<User>;
+    ChangeUserToTradesman(id: string): Promise<User | null>;
 }

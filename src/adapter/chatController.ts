@@ -13,7 +13,7 @@ export default class ChatController {
 
     async getAllConversations(req: Req, res: Res, next: Next) {
         try {
-            const senderId = (req as any)?.senderId;
+            const {senderId} = req.params
             const result = await this.chatUsecase.getAllConversations(senderId);
             res.status(result.status).json(result.data);
         } catch (error) {
@@ -23,10 +23,11 @@ export default class ChatController {
 
     async addConversation(req: Req, res: Res, next: Next) {
         try {
-            const { user, tradesman = null } = req.body;
-            const senderId = (req as any)?.senderId;
+            const { user1,user2, tradesman = null } = req.body;
+            console.log(user1,user2);
+            
             const result = await this.chatUsecase.createNewConversation(
-                [senderId, user],
+                [user1, user2],
                 tradesman
             );
             res.status(result.status).json(result.data);
@@ -37,9 +38,8 @@ export default class ChatController {
 
     async addMessage(req: Req, res: Res, next: Next) {
         try {
-            const { receiverId, conversationId } = req.body;
+            const { receiverId,senderId, conversationId } = req.body;
             let content = req.body.text;
-            const senderId = (req as any)?.senderId;
             const message: Message = {
                 conversationId,
                 message: {

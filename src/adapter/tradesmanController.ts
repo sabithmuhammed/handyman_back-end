@@ -7,28 +7,19 @@ import Cloudinary from "../infrastructure/utils/cloudinary";
 import FileOperations from "../infrastructure/utils/fileOperations";
 import PostUsecase from "../use_case/postUsecase";
 import { REFRESH_TOKEN_MAX_AGE } from "../infrastructure/constants/constants";
-import { NextFunction } from "express";
+import { ConfigurationType } from "../use_case/interface/ITradesmanRepository";
 
 export default class TradesmanController {
     constructor(
         private tradesmanUsecase: TradesmanUsecase,
-        private jwtCreate: JwtCreate,
         private cloudinary: Cloudinary,
-        private fileOperations: FileOperations,
-        private postUsecase: PostUsecase
+        private fileOperations: FileOperations
     ) {}
 
     async register(req: Req, res: Res, next: Next) {
         try {
-            const {
-                name,
-                skills,
-                experience,
-                wageAmount,
-                wageType,
-                latitude,
-                longitude,
-            } = req.body;
+            const { name, category, experience, latitude, longitude } =
+                req.body;
             const userId = (req as any)?.user;
             const images = req.files as IFile[];
 
@@ -38,14 +29,10 @@ export default class TradesmanController {
             const tradesman = await this.tradesmanUsecase.saveTradesman({
                 name,
                 userId,
-                skills: skills.split(","),
+                category,
                 experience,
-                wage: {
-                    amount: wageAmount,
-                    type: wageType,
-                },
                 location: {
-                    coordinates: [latitude, longitude],
+                    coordinates: [longitude, latitude],
                     type: "Point",
                 },
                 profile,
@@ -88,54 +75,72 @@ export default class TradesmanController {
         }
     }
 
-    async getPost(req: Req, res: Res, next: Next) {
-        try {
-            const tradesmanId = (req as any)?.tradesman;
-            const posts = await this.postUsecase.getPosts(tradesmanId);
-            res.status(posts.status).json(posts.data);
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    async getPostsById(req: Req, res: Res, next: NextFunction) {
-        try {
-            const { tradesmanId } = req.params;
-            const posts = await this.postUsecase.getPosts(tradesmanId);
-            console.log(posts,tradesmanId);
-            
-            res.status(posts.status).json(posts.data);
-        } catch (error) {
-            next(error);
-        }
-    }
-
-    async addPost(req: Req, res: Res, next: Next) {
-        try {
-            const tradesmanId = (req as any)?.tradesman;
-            let { text = "" } = req.body;
-            const images = req.files as IFile[];
-            let image = "";
-            if (images) {
-                image = await this.cloudinary.saveToCloudinary(images[0]);
-            }
-            const post = await this.postUsecase.addNewPost({
-                text: text,
-                image: image,
-                date: new Date(),
-                tradesmanId,
-            });
-            res.status(post.status).json(post.data);
-        } catch (error) {
-            next(error);
-        }
-    }
-
     async getProfileMinimum(req: Req, res: Res, next: Next) {
         try {
             const tradesmanId = req.params.tradesmanId;
             const result = await this.tradesmanUsecase.getProfileMinimum(
                 tradesmanId
+            );
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getProfileFull(req: Req, res: Res, next: Next) {
+        try {
+            const tradesmanId = (req as any)?.tradesman;
+
+            const result = await this.tradesmanUsecase.getProfileFull(
+                tradesmanId
+            );
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async updateConfiguration(req: Req, res: Res, next: Next) {
+        try {
+            const tradesmanId = (req as any)?.tradesman;
+            const {
+                startingTime,
+                endingTime,
+                bufferTime,
+                services,
+                slotSize,
+                workingDays,
+            }: ConfigurationType = req.body;
+            let hasError = false;
+            if (startingTime >= endingTime) {
+                hasError = true;
+            }
+            if (workingDays.every((day) => !day)) {
+                hasError = true;
+            }
+            if (Number(slotSize) < 0.5) {
+                hasError = true;
+            }
+            const allFilled = services.every(
+                (item) => item.description && item.amount && item.slots
+            );
+            if (!allFilled) {
+                hasError = true;
+            }
+            if (hasError) {
+                throw new Error("ValidationError");
+            }
+
+            const result = await this.tradesmanUsecase.updateConfiguration(
+                tradesmanId,
+                {
+                    startingTime,
+                    endingTime,
+                    bufferTime:Number(bufferTime),
+                    services,
+                    slotSize:Number(slotSize),
+                    workingDays,
+                }
             );
             res.status(result.status).json(result.data);
         } catch (error) {

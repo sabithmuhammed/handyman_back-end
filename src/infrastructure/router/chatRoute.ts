@@ -14,7 +14,7 @@ const chatUsecase = new ChatUsecase(conversationRepository, messageRepository);
 const chatController = new ChatController(chatUsecase);
 
 chatRouter.get(
-    "/get-conversations",
+    "/get-conversations/:senderId",
     userAuth,
     (req: Req, res: Res, next: Next) =>
         chatController.getAllConversations(req, res, next)

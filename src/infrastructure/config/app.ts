@@ -10,6 +10,8 @@ import userRouter from "../router/userRoute";
 import commonRouter from "../router/commonRoute";
 import tradesmanRouter from "../router/tradesmanRoute";
 import adminRouter from "../router/adminRoute";
+import bookingRouter from "../router/bookingRoute";
+import postRouter from "../router/postRoute";
 
 import errorHandler from "../middlewares/errorhandler";
 import chatRouter from "../router/chatRoute";
@@ -50,6 +52,8 @@ app.use("/api/common", commonRouter);
 app.use("/api/tradesman", tradesmanRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/chat", chatRouter);
+app.use("/api/booking", bookingRouter);
+app.use("/api/post", postRouter); 
 
 app.use(errorHandler);
 

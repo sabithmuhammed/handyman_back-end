@@ -43,7 +43,8 @@ const userAuth = async (req: Req, res: Res, next: Next) => {
                         return;
                     }
                     (req as any).user = userData._id;
-                    (req as any).senderId = decoded.userId;
+                   
+
                     next();
                     return;
                 }

@@ -31,6 +31,9 @@ export default class AdminController {
                     "verified"
                 );
             if (tradesman) {
+                await this.userUsecase.changeUserToTradesman(
+                    tradesman.data.userId as string
+                );
                 const user = await this.userUsecase.getUserById(
                     tradesman.data.userId as string
                 );
@@ -78,11 +81,11 @@ export default class AdminController {
         try {
             const page = req.query.page as string | undefined;
             const pageSize = req.query.pageSize as string | undefined;
-            const tradesman = await this.tradesmanUsecase.getTradesmen(
-                page,
-                pageSize
-            );
-            return res.status(tradesman.status).json(tradesman.data);
+            // const tradesman = await this.tradesmanUsecase.getTradesmen(
+            //     page,
+            //     pageSize
+            // );
+            // return res.status(tradesman.status).json(tradesman.data);
         } catch (error) {
             next(error);
         }

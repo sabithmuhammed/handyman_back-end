@@ -3,6 +3,7 @@ export default interface User{
     _id?:string,
     name:string,
     email:string,
+    profile?:string,
     password?:string,
     isBlocked?:boolean,
     isTradesman?:boolean,
