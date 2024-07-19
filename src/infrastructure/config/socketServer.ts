@@ -1,3 +1,4 @@
+import { query } from "express";
 import { Server, Socket } from "socket.io";
 
 interface User {
@@ -7,8 +8,6 @@ interface User {
 }
 
 export default function initializeSocket(server: any) {
-    console.log("hfdjshgshdfs");
-
     const io = new Server(server, {
         cors: {
             origin: process.env.CORS_URL,
@@ -18,6 +17,8 @@ export default function initializeSocket(server: any) {
     });
 
     let users: User[] = [];
+
+    // Socket helper functions
 
     const addUser = (userId: string, socketId: string) => {
         const userExist = users.find((user) => user.userId == userId);
@@ -33,27 +34,50 @@ export default function initializeSocket(server: any) {
     };
 
     const removeUser = (socketId: string) => {
-        const user = users.find((user) => user.socketId === socketId);
-        if (user) {
-            user.online = false;
-            io.emit("userOffline", user.userId);
-        }
+        users.map((user) => {
+            if (user.socketId === socketId) {
+                io.emit("userOffline", user.userId);
+                return { ...user, online: false };
+            }
+            return user;
+        });
     };
+
     const getUser = (userId: string) =>
         users.find((user) => user.userId === userId);
 
+    // Socket connection
+
     io.on("connection", (socket: Socket) => {
         const userId = socket.handshake.query.userId;
+        const tradesmanId = socket.handshake.query.tradesmanId;
         addUser(userId as string, socket.id);
+        if (tradesmanId) {
+            addUser(tradesmanId as string, socket.id);
+        }
         console.log(`User connected with ID: ${userId}`);
-        
-        socket.on("sendMessage", (message) => {
-            const user = getUser(message.receiverId);
+        console.log(socket.handshake.query);
+
+        socket.on("sendMessage", (data) => {
+            const user = getUser(data.message.receiverId);
+            console.log("message arrived", data);
+
             console.log(user);
 
             if (user) {
-                io.to(user.socketId).emit("newMessage", message);
+                if (data.toTradesman) {
+                    io.to(user.socketId).emit(
+                        "newMessageTradesman",
+                        data.message
+                    );
+                } else {
+                    io.to(user.socketId).emit("newMessageUser", data.message);
+                }
+                io.to(user.socketId).emit("msg",{userId});
             }
+        });
+        socket.on("disconnect", () => {
+            console.log("User disconnected");
         });
     });
 }

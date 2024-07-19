@@ -1,6 +1,7 @@
 import Comment from "../../domain/comment";
 import ICommentRepository from "../../use_case/interface/ICommentRepository";
 import CommentModel from "../database/commentModel";
+import UserModel from "../database/userModel";
 
 export default class CommentRepository implements ICommentRepository {
     async addComment(
@@ -65,6 +66,10 @@ export default class CommentRepository implements ICommentRepository {
                 return deletedComment;
             }
         }
+        await UserModel.populate(comment,{
+            path:"userId replies.userId",
+            select:{name:1,profile:1}
+        })
         return comment;
     }
 
