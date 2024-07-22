@@ -5,6 +5,10 @@ export default interface Conversation {
     id?: string;
     members: [string, string];
     lastMessage: string;
+    unreadMessage: {
+        user: string | null;
+        count: number;
+    };
     tradesmanId?: ObjectId | null;
     createdAt?: Date;
     updatedAt?: Date;

@@ -28,7 +28,6 @@ export default function initializeSocket(server: any) {
         } else {
             users.push({ userId, socketId, online: true });
         }
-        console.log(users);
 
         io.emit("userOnline", userId);
     };
@@ -55,14 +54,9 @@ export default function initializeSocket(server: any) {
         if (tradesmanId) {
             addUser(tradesmanId as string, socket.id);
         }
-        console.log(`User connected with ID: ${userId}`);
-        console.log(socket.handshake.query);
 
         socket.on("sendMessage", (data) => {
             const user = getUser(data.message.receiverId);
-            console.log("message arrived", data);
-
-            console.log(user);
 
             if (user) {
                 if (data.toTradesman) {

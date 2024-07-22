@@ -40,4 +40,33 @@ export default class ConversationRepository implements IConversationRepository {
         }).sort({ updatedAt: -1 });
         return conversations;
     }
+    async addUnreadMessage(
+        convoId: string,
+        receiverId: string
+    ): Promise<Conversation | null> {
+        const conversation = await ConversationModel.findById(convoId);
+        if (conversation) {
+            if (conversation.unreadMessage.user == receiverId) {
+                conversation.unreadMessage.count++;
+            } else {
+                conversation.unreadMessage.user = receiverId;
+                conversation.unreadMessage.count = 1;
+            }
+            await conversation.save({ timestamps: false });
+        }
+        return conversation;
+    }
+    async removeUnreadMessage(
+        convoId: string,
+        receiverId: string
+    ): Promise<Conversation | null> {
+        const conversation = await ConversationModel.findById(convoId);
+        if (conversation) {
+            if (conversation.unreadMessage.user == receiverId) {
+                conversation.unreadMessage.count = 0;
+            }
+            await conversation.save({ timestamps: false });
+        }
+        return conversation;
+    }
 }

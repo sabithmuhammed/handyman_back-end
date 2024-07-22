@@ -40,7 +40,7 @@ export type VerificationType = "pending" | "verified" | "rejected";
 export type FilterType = {
     category: string;
     coordinates: [number, number];
-    date?: Date;
+    date: string;
 };
 
 export type ConfigurationType = {

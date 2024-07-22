@@ -45,6 +45,10 @@ export default class ChatUsecase {
             newMessage.conversationId as unknown as string,
             newMessage.message.content
         );
+        await this.conversationRepository.addUnreadMessage(
+            conversation._id as string,
+            newMessage.receiverId as unknown as string
+        );
         return {
             status: STATUS_CODES.OK,
             data: newMessage,
@@ -54,6 +58,18 @@ export default class ChatUsecase {
     async getAllMessages(conversationId: string) {
         const messages = await this.messasgeRepository.getAllMessages(
             conversationId
+        );
+
+        return {
+            status: STATUS_CODES.OK,
+            data: messages,
+        };
+    }
+
+    async removeUnreadCount(conversationId: string, receiverId: string) {
+        const messages = await this.conversationRepository.removeUnreadMessage(
+            conversationId,
+            receiverId
         );
 
         return {

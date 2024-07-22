@@ -68,4 +68,17 @@ export default class ChatController {
             next(error);
         }
     }
+
+    async removeUnreadCount(req: Req, res: Res, next: Next) {
+        try {
+            const { conversationId } = req.params;
+            const {receiverId} = req.body
+            const result = await this.chatUsecase.removeUnreadCount(
+                conversationId,receiverId
+            );
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
 }

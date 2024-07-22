@@ -17,4 +17,7 @@ export default interface IBookingRepository {
     addInvoice(id: string, invoice: string): Promise<Booking | null>;
     getUnavailableSlots(tradesmanId: string, date: string): Promise<any[]>;
     changePaymentStatus(bookingId: string): Promise<Booking | null>;
+    getBookingsCount(tradesmanId: string): Promise<any>;
+    getServiceAndCount(tradesmanId:string,filter:string):Promise<any>
+    getPaymentAggregation(tradesmanId:string,filter:string):Promise<any>
 }

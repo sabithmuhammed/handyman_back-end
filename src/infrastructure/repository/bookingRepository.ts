@@ -4,6 +4,7 @@ import IBookingRepository from "../../use_case/interface/IBookingRepository";
 import { ObjectId } from "mongodb";
 import UserModel from "../database/userModel";
 import InvoiceModel from "../database/invoiceModel";
+import mongoose from "mongoose";
 
 export default class BookingRepository implements IBookingRepository {
     async createNewBooking(booking: Booking): Promise<Booking> {
@@ -233,5 +234,146 @@ export default class BookingRepository implements IBookingRepository {
             { new: true }
         );
         return booking;
+    }
+
+    async getBookingsCount(tradesmanId: string): Promise<any> {
+        const bookingsCount = await BookingModel.aggregate([
+            {
+                $match: {
+                    tradesmanId: new ObjectId(tradesmanId),
+                },
+            },
+            {
+                $group: {
+                    _id: "$status",
+                    count: {
+                        $sum: 1,
+                    },
+                },
+            },
+        ]);
+        return bookingsCount;
+    }
+    async getServiceAndCount(
+        tradesmanId: string,
+        filter: string
+    ): Promise<any> {
+        const currentDate = new Date();
+        let startDate;
+
+        if (filter === "today") {
+            startDate = new Date(currentDate.setHours(0, 0, 0, 0));
+        } else if (filter === "week") {
+            startDate = new Date(
+                currentDate.setDate(
+                    currentDate.getDate() - currentDate.getDay()
+                )
+            );
+            startDate.setHours(0, 0, 0, 0);
+        } else if (filter === "month") {
+            startDate = new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                1
+            );
+        } else if (filter === "year") {
+            startDate = new Date(currentDate.getFullYear(), 0, 1);
+        } else {
+            throw new Error("Invalid period specified");
+        }
+
+        let pipeline = [
+            {
+                $match: {
+                    tradesmanId: new ObjectId(tradesmanId),
+                    "paymentDetails.status": "success",
+                    bookingDate: { $gte: startDate },
+                },
+            },
+            {
+                $group: {
+                    _id: "$service",
+                    count: { $sum: 1 },
+                },
+            },
+        ];
+
+        const data = await BookingModel.aggregate(pipeline).exec();
+
+        return data;
+    }
+
+    async getPaymentAggregation(
+        tradesmanId: string,
+        filter: string
+    ): Promise<any> {
+        const currentDate = new Date();
+        let startDate: Date;
+        let groupBy: any;
+
+        if (filter === "today") {
+            startDate = new Date(currentDate.setHours(0, 0, 0, 0));
+            groupBy = {
+                $dateToString: {
+                    format: "%Y-%m-%d",
+                    date: "$paymentDetails.date",
+                },
+            };
+        } else if (filter === "week") {
+            startDate = new Date(
+                currentDate.setDate(
+                    currentDate.getDate() - currentDate.getDay()
+                )
+            );
+            startDate.setHours(0, 0, 0, 0);
+            groupBy = {
+                $dateToString: {
+                    format: "%Y-%m-%d",
+                    date: "$paymentDetails.date",
+                },
+            };
+        } else if (filter === "month") {
+            startDate = new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                1
+            );
+            groupBy = {
+                $dateToString: {
+                    format: "%Y-%m-%d",
+                    date: "$paymentDetails.date",
+                },
+            };
+        } else if (filter === "year") {
+            startDate = new Date(currentDate.getFullYear(), 0, 1);
+            groupBy = {
+                $dateToString: {
+                    format: "%Y-%m",
+                    date: "$paymentDetails.date",
+                },
+            };
+        } else {
+            throw new Error("Invalid period specified");
+        }
+
+        const pipeline: mongoose.PipelineStage[] = [
+            {
+                $match: {
+                    "paymentDetails.status": "success",
+                    "paymentDetails.date": { $gte: startDate },
+                },
+            },
+            {
+                $group: {
+                    _id: groupBy,
+                    totalAmount: { $sum: "$amount" },
+                },
+            },
+            {
+                $sort: { _id: 1 as 1 | -1 },
+            },
+        ];
+
+        return await BookingModel.aggregate(pipeline).exec();
     }
 }

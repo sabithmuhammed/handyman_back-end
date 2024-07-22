@@ -161,4 +161,45 @@ export default class BookingController {
             next(error);
         }
     }
+
+    async dashBoardBookingDetails(req: Req, res: Res, next: Next) {
+        try {
+            const tradesmanId = (req as any)?.tradesman;
+            
+            const result = await this.bookingUsecase.dashBoardBookingDetails(
+                tradesmanId
+            );
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getServiceCount(req: Req, res: Res, next: Next) {
+        try {
+            const tradesmanId = (req as any)?.tradesman;
+            const {filter} = req.query
+            
+            const result = await this.bookingUsecase.getServiceCount(
+                tradesmanId,filter as string
+            );
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getAmountAggregation(req: Req, res: Res, next: Next) {
+        try {
+            const tradesmanId = (req as any)?.tradesman;
+            const {filter} = req.query
+            
+            const result = await this.bookingUsecase.getAmountAggregation(
+                tradesmanId,filter as string
+            );
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
 }

@@ -171,13 +171,15 @@ export default class UserController {
 
     async getTradesmen(req: Req, res: Res, next: Next) {
         try {
-            const { page, pageSize, longitude, latitude, category } = req.query;
+            const { page, pageSize, longitude, latitude, category, date } =
+                req.query;
 
             const tradesmen = await this.tradesmanUsecase.getTradesmen(
                 Number(page),
                 Number(pageSize),
                 {
                     category: category as string,
+                    date: date ? (date as string) : "",
                     coordinates: [Number(longitude), Number(latitude)],
                 }
             );

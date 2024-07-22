@@ -1,0 +1,35 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const jwtCreate_1 = __importDefault(require("../utils/jwtCreate"));
+const tradesmanRepository_1 = __importDefault(require("../repository/tradesmanRepository"));
+const tradesmanUsecase_1 = __importDefault(require("../../use_case/tradesmanUsecase"));
+const adminController_1 = __importDefault(require("../../adapter/adminController"));
+const sendMail_1 = __importDefault(require("../utils/sendMail"));
+const userUsecase_1 = __importDefault(require("../../use_case/userUsecase"));
+const userRepository_1 = __importDefault(require("../repository/userRepository"));
+const hashPassword_1 = __importDefault(require("../utils/hashPassword"));
+const adminAuth_1 = __importDefault(require("../middlewares/adminAuth"));
+const adminRouter = express_1.default.Router();
+const jwtCreate = new jwtCreate_1.default();
+const tradesmanRepository = new tradesmanRepository_1.default();
+const tradesmanUsecase = new tradesmanUsecase_1.default(tradesmanRepository, jwtCreate);
+const userRepository = new userRepository_1.default();
+const encrypt = new hashPassword_1.default();
+const userUsecase = new userUsecase_1.default(userRepository, encrypt, jwtCreate);
+const sendMail = new sendMail_1.default();
+const controller = new adminController_1.default(tradesmanUsecase, userUsecase, sendMail);
+adminRouter.get("/get-verification", adminAuth_1.default, (req, res, next) => controller.getPending(req, res, next));
+adminRouter.patch("/verify-tradesman", adminAuth_1.default, (req, res, next) => controller.verifyTradesman(req, res, next));
+adminRouter.patch("/reject-tradesman", adminAuth_1.default, (req, res, next) => controller.rejectTradesman(req, res, next));
+adminRouter.get("/get-tradesmen", adminAuth_1.default, (req, res, next) => controller.getTradesmen(req, res, next));
+adminRouter.get("/get-users", adminAuth_1.default, (req, res, next) => controller.getUsers(req, res, next));
+adminRouter.patch("/block-user", adminAuth_1.default, (req, res, next) => controller.userBlock(req, res, next));
+adminRouter.patch("/unblock-user", adminAuth_1.default, (req, res, next) => controller.userUnblock(req, res, next));
+adminRouter.patch("/block-tradesman", adminAuth_1.default, (req, res, next) => controller.tradesmanBlock(req, res, next));
+adminRouter.patch("/unblock-tradesman", adminAuth_1.default, (req, res, next) => controller.tradesmanUnblock(req, res, next));
+exports.default = adminRouter;
+//# sourceMappingURL=adminRoute.js.map

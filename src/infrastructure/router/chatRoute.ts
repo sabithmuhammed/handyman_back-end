@@ -41,4 +41,12 @@ chatRouter.get(
         chatController.getAllMessages(req, res, next)
 );
 
+chatRouter.patch(
+    "/remove-unread/:conversationId",
+    userAuth,
+    (req: Req, res: Res, next: Next) =>
+        chatController.removeUnreadCount(req, res, next)
+);
+
+
 export default chatRouter;

@@ -148,4 +148,41 @@ export default class BookingUsecase {
             data: result,
         };
     }
+
+    async dashBoardBookingDetails(tradesmanId: string) {
+        const result = await this.bookingRepository.getBookingsCount(
+            tradesmanId
+        );
+
+        return {
+            status: STATUS_CODES.OK,
+            data: result,
+        };
+    }
+
+    async getServiceCount(tradesmanId: string, filter: string) {
+        const result = await this.bookingRepository.getServiceAndCount(
+            tradesmanId,
+            filter
+        );
+
+        return {
+            status: STATUS_CODES.OK,
+            data: result,
+        };
+    }
+
+    async getAmountAggregation(tradesmanId: string, filter: string) {
+        const result = await this.bookingRepository.getPaymentAggregation(
+            tradesmanId,
+            filter
+        );
+
+        return {
+            status: STATUS_CODES.OK,
+            data: result,
+        };
+    }
+
+    
 }

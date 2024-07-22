@@ -98,4 +98,14 @@ bookingRouter.get('/get-unavailable-slots',(req: Req, res: Res, next: Next) =>
 bookingRouter.patch('/payment-successful/:bookingId',(req: Req, res: Res, next: Next) =>
     bookingController.changePaymentToSuccess(req, res, next))
 
+bookingRouter.get('/dashboard-bookings',tradesmanAuth,(req: Req, res: Res, next: Next) =>
+    bookingController.dashBoardBookingDetails(req, res, next))
+
+bookingRouter.get('/get-service-count',tradesmanAuth,(req: Req, res: Res, next: Next) =>
+    bookingController.getServiceCount(req, res, next))
+
+bookingRouter.get('/get-amount-aggregation',tradesmanAuth,(req: Req, res: Res, next: Next) =>
+    bookingController.getAmountAggregation(req, res, next))
+
+
 export default bookingRouter;

@@ -1,0 +1,35 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const userAuth_1 = __importDefault(require("../middlewares/userAuth"));
+const generate_unique_id_1 = __importDefault(require("generate-unique-id"));
+const tradesmanAuth_1 = __importDefault(require("../middlewares/tradesmanAuth"));
+const bookingRepository_1 = __importDefault(require("../repository/bookingRepository"));
+const bookingUsecase_1 = __importDefault(require("../../use_case/bookingUsecase"));
+const bookingController_1 = __importDefault(require("../../adapter/bookingController"));
+const invoiceRepository_1 = __importDefault(require("../repository/invoiceRepository"));
+const invoiceUsecase_1 = __importDefault(require("../../use_case/invoiceUsecase"));
+const bookingRouter = express_1.default.Router();
+const bookingRepository = new bookingRepository_1.default();
+const bookingUsecase = new bookingUsecase_1.default(bookingRepository, generate_unique_id_1.default);
+const invoiceRepository = new invoiceRepository_1.default();
+const invoiceUsecase = new invoiceUsecase_1.default(invoiceRepository, generate_unique_id_1.default);
+const bookingController = new bookingController_1.default(bookingUsecase, invoiceUsecase);
+bookingRouter.post("/new-booking", userAuth_1.default, (req, res, next) => bookingController.addNewBooking(req, res, next));
+bookingRouter.get("/pending-bookings", tradesmanAuth_1.default, (req, res, next) => bookingController.getPendingBookings(req, res, next));
+bookingRouter.patch("/schedule-booking/:bookingId", tradesmanAuth_1.default, (req, res, next) => bookingController.sheduleBooking(req, res, next));
+bookingRouter.get("/get-scheduled-dates/:tradesman", (req, res, next) => bookingController.getScheduledDates(req, res, next));
+bookingRouter.patch("/cancel-booking/:bookingId", tradesmanAuth_1.default, (req, res, next) => bookingController.cancelBooking(req, res, next));
+bookingRouter.get("/get-scheduled-booking", tradesmanAuth_1.default, (req, res, next) => bookingController.getScheduledBooking(req, res, next));
+bookingRouter.patch("/job-complete/:bookingId", tradesmanAuth_1.default, (req, res, next) => bookingController.changeToCompled(req, res, next));
+bookingRouter.get("/get-completed", tradesmanAuth_1.default, (req, res, next) => bookingController.getCompletedBookings(req, res, next));
+bookingRouter.get("/get-user-bookings", userAuth_1.default, (req, res, next) => bookingController.getUserBooking(req, res, next));
+bookingRouter.post("/create-invoice", tradesmanAuth_1.default, (req, res, next) => bookingController.createInvoice(req, res, next));
+bookingRouter.patch("/invoice-to-paid/:id", tradesmanAuth_1.default, (req, res, next) => bookingController.changeToPaid(req, res, next));
+bookingRouter.get('/get-unavailable-slots', (req, res, next) => bookingController.getAllUnavailableSlots(req, res, next));
+bookingRouter.patch('/payment-successful/:bookingId', (req, res, next) => bookingController.changePaymentToSuccess(req, res, next));
+exports.default = bookingRouter;
+//# sourceMappingURL=bookingRoute.js.map

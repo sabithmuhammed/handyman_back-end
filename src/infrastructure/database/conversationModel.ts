@@ -6,6 +6,13 @@ const ConversationSchema: Schema = new Schema<Conversation | Document>(
     {
         members: [{ type: ObjectId }],
         lastMessage: { type: String, default: "" },
+        unreadMessage: {
+            user: { type: String, default: null },
+            count: {
+                type: Number,
+                default: 0,
+            },
+        },
         tradesmanId: { type: ObjectId, default: null },
     },
     { timestamps: true }
