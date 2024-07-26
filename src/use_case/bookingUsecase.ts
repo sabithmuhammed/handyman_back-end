@@ -81,9 +81,10 @@ export default class BookingUsecase {
         };
     }
 
-    async getScheduledBooking(tradesmanId: string) {
+    async getScheduledBooking(tradesmanId: string, date: string) {
         const data = await this.bookingRepository.getScheduledBooking(
-            tradesmanId
+            tradesmanId,
+            date
         );
         return {
             status: STATUS_CODES.OK,
@@ -101,9 +102,10 @@ export default class BookingUsecase {
         };
     }
 
-    async getCompledBookings(tradesmanId: string) {
+    async getCompledBookings(tradesmanId: string, date: string) {
         const result = await this.bookingRepository.getCompletedBookings(
-            tradesmanId
+            tradesmanId,
+            date
         );
         return {
             status: STATUS_CODES.OK,
@@ -183,6 +185,4 @@ export default class BookingUsecase {
             data: result,
         };
     }
-
-    
 }

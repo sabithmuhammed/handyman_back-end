@@ -1,8 +1,7 @@
-import { OTP_STRING } from "../constants/constants";
 
  export default class GenerateOtp {
     async generateOtp(length: number): Promise<string> {
-        const numericCharecters = OTP_STRING;
+        const numericCharecters = process.env.OTP_STRING as string;
         let otp = "";
         for (let i = 0; i < length; i++) {
             const randIndex = Math.floor(

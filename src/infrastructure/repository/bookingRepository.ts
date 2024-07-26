@@ -93,14 +93,34 @@ export default class BookingRepository implements IBookingRepository {
         return result;
     }
 
-    async getScheduledBooking(tradesmanId: string): Promise<Booking[]> {
-        // const result = await BookingModel.find({
-        //     status: {
-        //         $nin: ["canceled", "booked"],
-        //     },
-        // }).populate("userId", "name profile");
+    async getScheduledBooking(
+        tradesmanId: string,
+        date: string
+    ): Promise<Booking[]> {
+        let query: object = {
+            tradesmanId,
+            status: "booked",
+        };
+        if (date) {
+            const startDate = new Date(date);
+            const endDate = new Date(date);
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(23, 59, 59, 999);
+            query = {
+                tradesmanId,
+                status: "booked",
+                $and: [
+                    {
+                        bookingDate: {
+                            $gte: startDate,
+                            $lte: endDate,
+                        },
+                    },
+                ],
+            };
+        }
 
-        const result = await BookingModel.find({ status: "booked" }).sort({
+        const result = await BookingModel.find(query).sort({
             bookingDate: -1,
         });
         await UserModel.populate(result, {
@@ -123,11 +143,33 @@ export default class BookingRepository implements IBookingRepository {
         return booking;
     }
 
-    async getCompletedBookings(tradesmanId: string): Promise<Booking[]> {
-        const bookings = await BookingModel.find({
+    async getCompletedBookings(
+        tradesmanId: string,
+        date: string
+    ): Promise<Booking[]> {
+        let query: object = {
             tradesmanId,
             status: "completed",
-        }).populate({
+        };
+        if (date) {
+            const startDate = new Date(date);
+            const endDate = new Date(date);
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(23, 59, 59, 999);
+            query = {
+                tradesmanId,
+                status: "completed",
+                $and: [
+                    {
+                        bookingDate: {
+                            $gte: startDate,
+                            $lte: endDate,
+                        },
+                    },
+                ],
+            };
+        }
+        const bookings = await BookingModel.find(query).populate({
             path: "userId",
             select: "name profile",
         });

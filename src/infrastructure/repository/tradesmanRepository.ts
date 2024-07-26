@@ -90,166 +90,270 @@ export default class TradesmanRepository implements ITradesmanRepository {
         totalCount: number;
         page: number;
     }> {
-        const offset = (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
+        const offset =
+            (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
         const limit = pageSize ? Number(pageSize) : 10;
-    
-        const selectedDate = filters.date ? new Date(filters.date).toISOString().split("T")[0] : null;
-        const dayOfWeek = selectedDate ? (new Date(selectedDate).getUTCDay() + 1) % 7 : null; // Get day of week (0-6), with Sunday as 0
-    
-        const pipeline: any[] = [
-            // Stage 1: Filter tradesmen based on working days and other filters
+
+        const selectedDate = filters.date
+            ? new Date(filters.date).toISOString().split("T")[0]
+            : null;
+        const dayOfWeek = selectedDate
+            ? (new Date(selectedDate).getUTCDay() + 1) % 7
+            : null; // Get day of week (0-6), with Sunday as 0
+
+        // verificationStatus: "verified",
+        //             ...(filters.category && { category: { $regex: ".*" + filters.category + ".*", $options: "i" } }),
+        //             ...(filters.coordinates && filters.coordinates.length === 2 && {
+        //                 location: {
+        //                     $geoWithin: {
+        //                         $centerSphere: [filters.coordinates, 10000 / 6378100] // 10000 meters in radians
+        //                     }
+        //                 }
+        //             }),
+
+        let pipeline: any[] = [
             {
                 $match: {
-                    verificationStatus: "verified",
-                    ...(filters.category && { category: { $regex: ".*" + filters.category + ".*", $options: "i" } }),
-                    ...(filters.coordinates && filters.coordinates.length === 2 && {
+                    category: {
+                        $regex: ".*" + filters.category + ".*",
+                        $options: "i",
+                    },
+                    location: {
+                        $geoWithin: {
+                            $centerSphere: [
+                                filters.coordinates,
+                                10000 / 6378100,
+                            ], // 10000 meters in radians
+                        },
+                    },
+                },
+            },
+            { $skip: offset },
+            { $limit: limit },
+        ];
+        if (filters.date) {
+            const date = new Date(filters.date);
+            const dayOfWeek = date.getDay();
+            const startDate = new Date(filters.date);
+            const endDate = new Date(filters.date);
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(23, 59, 59, 999);
+            
+            pipeline = [
+                {
+                    $match: {
+                        category: {
+                            $regex: ".*" + filters.category + ".*",
+                            $options: "i",
+                        },
                         location: {
                             $geoWithin: {
-                                $centerSphere: [filters.coordinates, 10000 / 6378100] // 10000 meters in radians
-                            }
-                        }
-                    }),
-                    ...(dayOfWeek !== null && {
-                        [`configuration.workingDays.${dayOfWeek}`]: true
-                    })
-                }
-            },
-            // Stage 2: Add fields to calculate total available slots
-            {
-                $addFields: {
-                    startingDateTime: {
-                        $dateFromString: {
-                            dateString: { $concat: [selectedDate, "T", "$configuration.startingTime", ":00.000Z"] }
-                        }
-                    },
-                    endingDateTime: {
-                        $dateFromString: {
-                            dateString: { $concat: [selectedDate, "T", "$configuration.endingTime", ":00.000Z"] }
-                        }
-                    },
-                    slotDurationMillis: { $multiply: ["$configuration.slotSize", 60 * 60 * 1000] }, // Slot size in milliseconds
-                    bufferTimeMillis: { $multiply: ["$configuration.bufferTime", 60 * 1000] } // Buffer time in milliseconds
-                }
-            },
-            // Stage 3: Calculate the total number of slots
-            {
-                $addFields: {
-                    totalAvailableSlots: {
-                        $floor: {
-                            $divide: [
+                                $centerSphere: [
+                                    filters.coordinates,
+                                    10000 / 6378100,
+                                ], // 10000 meters in radians
+                            },
+                        },
+                        $expr: {
+                            $eq: [
                                 {
-                                    $subtract: [
-                                        { $toLong: "$endingDateTime" },
-                                        { $toLong: "$startingDateTime" }
-                                    ]
+                                    $arrayElemAt: [
+                                        "$configuration.workingDays",
+                                        dayOfWeek,
+                                    ],
+                                },
+                                true,
+                            ],
+                        },
+                    },
+                },
+                {
+                    $project: {
+                        name: 1,
+                        category: 1,
+                        experience: 1,
+                        location: 1,
+                        "configuration.startingTime": 1,
+                        "configuration.endingTime": 1,
+                        "configuration.bufferTime": 1,
+                        "configuration.slotSize": 1,
+                        "configuration.workingDays": 1,
+                        verificationStatus: 1,
+                        isBlocked: 1,
+                        rating: 1,
+                        // Convert times to minutes
+                        startMinutes: {
+                            $sum: [
+                                {
+                                    $multiply: [
+                                        {
+                                            $toInt: {
+                                                $substr: [
+                                                    "$configuration.startingTime",
+                                                    0,
+                                                    2,
+                                                ],
+                                            },
+                                        },
+                                        60,
+                                    ],
                                 },
                                 {
-                                    $add: [
-                                        "$slotDurationMillis",
-                                        "$bufferTimeMillis"
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
-            // Stage 4: Lookup bookings and count the slots for each tradesman
-            {
-                $lookup: {
-                    from: 'bookings',
-                    let: { tradesmanId: '$_id' },
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: {
-                                    $and: [
-                                        { $eq: ['$tradesmanId', '$$tradesmanId'] },
-                                        { $eq: [{ $substr: ['$bookingDate', 0, 10] }, selectedDate] }
-                                    ]
-                                }
-                            }
+                                    $toInt: {
+                                        $substr: [
+                                            "$configuration.startingTime",
+                                            3,
+                                            2,
+                                        ],
+                                    },
+                                },
+                            ],
                         },
-                        {
-                            $addFields: {
-                                numberOfSlotsBooked: { $size: "$slots" }
-                            }
+                        endMinutes: {
+                            $sum: [
+                                {
+                                    $multiply: [
+                                        {
+                                            $toInt: {
+                                                $substr: [
+                                                    "$configuration.endingTime",
+                                                    0,
+                                                    2,
+                                                ],
+                                            },
+                                        },
+                                        60,
+                                    ],
+                                },
+                                {
+                                    $toInt: {
+                                        $substr: [
+                                            "$configuration.endingTime",
+                                            3,
+                                            2,
+                                        ],
+                                    },
+                                },
+                            ],
                         },
-                        {
-                            $group: {
-                                _id: null,
-                                totalBookedSlots: { $sum: "$numberOfSlotsBooked" }
-                            }
-                        }
-                    ],
-                    as: 'bookings'
-                }
-            },
-            // Stage 5: Add field for total booked slots and filter tradesmen
-            {
-                $addFields: {
-                    totalBookedSlots: {
-                        $ifNull: [{ $arrayElemAt: ['$bookings.totalBookedSlots', 0] }, 0]
-                    }
-                }
-            },
-            {
-                $match: {
-                    $expr: {
-                        $lt: ['$totalBookedSlots', '$totalAvailableSlots']
-                    }
-                }
-            },
-            // Stage 6: Project the necessary fields
-            {
-                $project: {
-                    _id: 1,
-                    name: 1,
-                    profile: 1,
-                    idProof: 1,
-                    userId: 1,
-                    experience: 1,
-                    category: 1,
-                    location: 1,
-                    configuration: 1,
-                    verificationStatus: 1,
-                    isBlocked: 1,
-                    rating: 1
-                }
-            },
-            // Stage 7: Pagination
-            { $skip: offset },
-            { $limit: limit }
-        ];
-    
+                    },
+                },
+                {
+                    $addFields: {
+                        totalWorkingMinutes: {
+                            $subtract: ["$endMinutes", "$startMinutes"],
+                        },
+                        workingDaysCount: {
+                            $size: {
+                                $filter: {
+                                    input: "$configuration.workingDays",
+                                    as: "day",
+                                    cond: { $eq: ["$$day", true] },
+                                },
+                            },
+                        },
+                    },
+                },
+                {
+                    $addFields: {
+                        adjustedWorkingMinutes: {
+                            $subtract: [
+                                "$totalWorkingMinutes",
+                                "$configuration.bufferTime",
+                            ],
+                        },
+                        slotSizeMinutes: {
+                            $multiply: ["$configuration.slotSize", 60],
+                        },
+                    },
+                },
+                {
+                    $addFields: {
+                        slots: {
+                            $floor: {
+                                $divide: [
+                                    "$adjustedWorkingMinutes",
+                                    "$slotSizeMinutes",
+                                ],
+                            },
+                        },
+                    },
+                },
+                {
+                    $project: {
+                        startMinutes: 0,
+                        endMinutes: 0,
+                        totalWorkingMinutes: 0,
+                        adjustedWorkingMinutes: 0,
+                        slotSizeMinutes: 0,
+                        workingDaysCount: 0,
+                    },
+                },
+                {
+                    $lookup: {
+                        from: "bookings",
+                        let: { tradesmanId: "$_id" },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: {
+                                        $and: [
+                                            {
+                                                $eq: [
+                                                    "$tradesmanId",
+                                                    "$$tradesmanId",
+                                                ],
+                                            },
+                                            { $gte: ["$bookingDate", startDate] }, // Replace with the date you want to filter by
+                                            { $lte: ["$bookingDate", endDate] },
+                                        ],
+                                    },
+                                },
+                            },
+                        ],
+                        as: "bookings",
+                    },
+                },
+                {
+                    $addFields: { slots: { $subtract: ["$slots", 1] } },
+                },
+                {
+                    $addFields: {
+                        bookingCount: { $size: "$bookings" }, // Add a field to store the size of the bookings array
+                    },
+                },
+                {
+                    $match: {
+                        $expr: {
+                            $lt: ["$bookingCount", "$slots"], // Compare the size of bookings with the slots field
+                        },
+                    },
+                },
+                {
+                    $project: {
+                        bookingCount: 0,
+                        slots: 0,
+                        bookings: 0,
+                    },
+                },
+                { $skip: offset },
+                { $limit: limit },
+            ];
+        }
+
         // Execute the aggregation pipeline
         const tradesmen = await TradesmanModel.aggregate(pipeline);
-    
+
         // Get the total count of tradesmen matching the initial filters
-        const totalCount = await TradesmanModel.countDocuments({
-            verificationStatus: "verified",
-            ...(filters.category && { category: { $regex: ".*" + filters.category + ".*", $options: "i" } }),
-            ...(filters.coordinates && filters.coordinates.length === 2 && {
-                location: {
-                    $geoWithin: {
-                        $centerSphere: [filters.coordinates, 10000 / 6378100] // 10000 meters in radians
-                    }
-                }
-            }),
-            ...(dayOfWeek !== null && {
-                [`configuration.workingDays.${dayOfWeek}`]: true
-            })
-        });
-    
+        const totalCount = await TradesmanModel.countDocuments({});
+        console.log(tradesmen, "hjghghjkjghjghghgh");
+
         return {
             tradesmen,
             totalCount,
             page: page ? Number(page) : 1,
         };
     }
-    
-    
-    
 
     async toggleBlock(
         tradesmaId: string,

@@ -70,8 +70,10 @@ export default class BookingController {
     async getScheduledBooking(req: Req, res: Res, next: Next) {
         try {
             const tradesmanId = (req as any)?.tradesman;
+            const { date } = req.query;
             const result = await this.bookingUsecase.getScheduledBooking(
-                tradesmanId
+                tradesmanId,
+                date as string
             );
             res.status(result.status).json(result.data);
         } catch (error) {
@@ -92,8 +94,10 @@ export default class BookingController {
     async getCompletedBookings(req: Req, res: Res, next: Next) {
         try {
             const tradesmanId = (req as any)?.tradesman;
+            const { date } = req.query;
             const result = await this.bookingUsecase.getCompledBookings(
-                tradesmanId
+                tradesmanId,
+                date as string
             );
             res.status(result.status).json(result.data);
         } catch (error) {
@@ -152,7 +156,7 @@ export default class BookingController {
     async changePaymentToSuccess(req: Req, res: Res, next: Next) {
         try {
             const { bookingId } = req.params;
-            
+
             const result = await this.bookingUsecase.changePaymentToSuccess(
                 bookingId
             );
@@ -165,7 +169,7 @@ export default class BookingController {
     async dashBoardBookingDetails(req: Req, res: Res, next: Next) {
         try {
             const tradesmanId = (req as any)?.tradesman;
-            
+
             const result = await this.bookingUsecase.dashBoardBookingDetails(
                 tradesmanId
             );
@@ -178,10 +182,11 @@ export default class BookingController {
     async getServiceCount(req: Req, res: Res, next: Next) {
         try {
             const tradesmanId = (req as any)?.tradesman;
-            const {filter} = req.query
-            
+            const { filter } = req.query;
+
             const result = await this.bookingUsecase.getServiceCount(
-                tradesmanId,filter as string
+                tradesmanId,
+                filter as string
             );
             res.status(result.status).json(result.data);
         } catch (error) {
@@ -192,10 +197,11 @@ export default class BookingController {
     async getAmountAggregation(req: Req, res: Res, next: Next) {
         try {
             const tradesmanId = (req as any)?.tradesman;
-            const {filter} = req.query
-            
+            const { filter } = req.query;
+
             const result = await this.bookingUsecase.getAmountAggregation(
-                tradesmanId,filter as string
+                tradesmanId,
+                filter as string
             );
             res.status(result.status).json(result.data);
         } catch (error) {

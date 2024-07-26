@@ -10,9 +10,9 @@ export default interface IBookingRepository {
     getScheduledDates(tradesmanId: string, startingDate: Date): Promise<Date[]>;
     checkAvailability(tradesmanId: string, date: Date): Promise<boolean>;
     rejectBooking(bookingId: string): Promise<Booking | null>;
-    getScheduledBooking(tradesmanId: string): Promise<Booking[]>;
+    getScheduledBooking(tradesmanId: string,date:string): Promise<Booking[]>;
     changeToCompleted(bookingId: string): Promise<Booking | null>;
-    getCompletedBookings(tradesmanId: string): Promise<Booking[]>;
+    getCompletedBookings(tradesmanId: string,date:string): Promise<Booking[]>;
     getAllUserBookings(userId: string): Promise<Booking[]>;
     addInvoice(id: string, invoice: string): Promise<Booking | null>;
     getUnavailableSlots(tradesmanId: string, date: string): Promise<any[]>;
