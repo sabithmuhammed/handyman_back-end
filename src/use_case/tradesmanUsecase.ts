@@ -146,7 +146,7 @@ export default class TradesmanUsecase {
                 experience,
                 location,
                 category,
-                rating,
+                reviews,
                 configuration
             } = result;
             return {
@@ -158,7 +158,7 @@ export default class TradesmanUsecase {
                     experience,
                     location,
                     category,
-                    rating,
+                    reviews,
                     configuration
                 },
             };
