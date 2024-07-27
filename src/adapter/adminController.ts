@@ -81,11 +81,15 @@ export default class AdminController {
         try {
             const page = req.query.page as string | undefined;
             const pageSize = req.query.pageSize as string | undefined;
-            // const tradesman = await this.tradesmanUsecase.getTradesmen(
-            //     page,
-            //     pageSize
-            // );
-            // return res.status(tradesman.status).json(tradesman.data);
+            const category = req.query.category as string | undefined;
+            const tradesman = await this.tradesmanUsecase.getAllTradesmen(
+                page ? Number(page) : 0,
+                pageSize ? Number(pageSize) : 5,
+                {
+                    category: category ? category : "",
+                }
+            );
+            return res.status(tradesman.status).json(tradesman.data);
         } catch (error) {
             next(error);
         }

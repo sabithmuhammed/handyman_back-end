@@ -345,8 +345,8 @@ export default class TradesmanRepository implements ITradesmanRepository {
         const tradesmen = await TradesmanModel.aggregate(pipeline);
 
         // Get the total count of tradesmen matching the initial filters
-        const totalCount = await TradesmanModel.countDocuments({});
-        console.log(tradesmen, "hjghghjkjghjghghgh");
+        const totalCount = await TradesmanModel.countDocuments(pipeline);
+console.log(totalCount);
 
         return {
             tradesmen,
@@ -413,10 +413,11 @@ export default class TradesmanRepository implements ITradesmanRepository {
 
         tradesmen = await TradesmanModel.find({
             verificationStatus: "verified",
-            skills: { $regex: ".*" + filters.category + ".*", $options: "i" },
+            category: { $regex: ".*" + filters.category + ".*", $options: "i" },
         })
             .skip(offset)
             .limit(pageSize ? Number(pageSize) : 10);
+console.log(tradesmen);
 
         return {
             tradesmen,
