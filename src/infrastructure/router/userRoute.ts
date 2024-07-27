@@ -14,8 +14,6 @@ import OtpRepository from "../repository/otpRepository";
 import OtpUsecase from "../../use_case/otpUsecase";
 import Cloudinary from "../utils/cloudinary";
 import FileOperations from "../utils/fileOperations";
-import ToolRepository from "../repository/toolRepository";
-import ToolUsecase from "../../use_case/toolUsecase";
 import { Multer } from "../middlewares/multer";
 import userAuth from "../middlewares/userAuth";
 
@@ -32,8 +30,6 @@ const tradesmanRepository = new TradesmanRepository();
 const tradesmanUsecase = new TradesmanUsecase(tradesmanRepository, jwtCreate);
 const otpRepository = new OtpRepository();
 const otpUsecase = new OtpUsecase(otpRepository, encrypt);
-const toolRepository = new ToolRepository();
-const toolUsecase = new ToolUsecase(toolRepository);
 const controller = new UserController(
     useCase,
     generateOtp,
@@ -41,8 +37,7 @@ const controller = new UserController(
     otpUsecase,
     tradesmanUsecase,
     cloudinary,
-    fileOperations,
-    toolUsecase
+    fileOperations
 );
 
 route.post("/signup", (req, res, next) => controller.signUp(req, res, next));
@@ -77,18 +72,6 @@ route.get("/get-tradesmen", (req, res, next) =>
 
 route.get("/get-all-tradesmen", (req, res, next) =>
     controller.getAllTradesmen(req, res, next)
-);
-
-route.post("/add-tool", Multer.array("images"), userAuth, (req, res, next) =>
-    controller.addTool(req, res, next)
-);
-
-route.get("/get-tools", (req, res, next) =>
-    controller.getTools(req, res, next)
-);
-
-route.get("/get-my-tools", (req, res, next) =>
-    controller.getMyTools(req, res, next)
 );
 
 route.get("/get-user-info/:userId", (req, res, next) =>
