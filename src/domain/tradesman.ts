@@ -13,11 +13,6 @@ export default interface Tradesman {
         coordinates: [number, number];
         type: "Point";
     };
-    reviews?: {
-        review:string,
-        rating: number;
-        userId: string;
-    };
     configuration?: {
         startingTime: string;
         endingTime: string;

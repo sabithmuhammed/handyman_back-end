@@ -16,6 +16,7 @@ import postRouter from "../router/postRoute";
 import errorHandler from "../middlewares/errorhandler";
 import chatRouter from "../router/chatRoute";
 import initializeSocket from "./socketServer";
+import reviewRouter from "../router/reviewRoute";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -54,6 +55,7 @@ app.use("/api/admin", adminRouter);
 app.use("/api/chat", chatRouter);
 app.use("/api/booking", bookingRouter);
 app.use("/api/post", postRouter); 
+app.use("/api/review", reviewRouter); 
 
 app.use(errorHandler);
 

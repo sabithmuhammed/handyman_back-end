@@ -124,7 +124,6 @@ export default class TradesmanRepository implements ITradesmanRepository {
                         "configuration.workingDays": 1,
                         verificationStatus: 1,
                         isBlocked: 1,
-                        reviews: 1,
                         // Convert times to minutes
                         startMinutes: {
                             $sum: [
