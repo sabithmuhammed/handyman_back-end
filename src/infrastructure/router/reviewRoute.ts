@@ -11,7 +11,7 @@ const reviewRepository = new ReviewRepository();
 const reviewUsecase = new ReviewUsecase(reviewRepository);
 const reviewController = new ReviewController(reviewUsecase);
 
-reviewRouter.get("/get-review-booking/bookingId", userAuth, (req, res, next) =>
+reviewRouter.get("/get-review-booking/:bookingId", userAuth, (req, res, next) =>
     reviewController.getReviewForBooking(req, res, next)
 );
 reviewRouter.post("/add-review", userAuth, (req, res, next) =>
