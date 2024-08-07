@@ -9,7 +9,7 @@ const MessageSchema: Schema = new Schema<Message | Document>(
         receiverId: { type: ObjectId },
         message: {
             type: { type: String },
-            content: { type: String },
+            content: { type: String, trim:true },
         },
         status: { type: String, default: "sent" },
     },

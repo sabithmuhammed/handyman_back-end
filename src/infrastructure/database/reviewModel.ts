@@ -4,7 +4,7 @@ import Review from "../../domain/review";
 
 const ReviewSchema: Schema = new Schema<Review | Document>(
     {
-        review: { type: String },
+        review: { type: String, trim: true },
         rating: { type: Number },
         tradesmanId: { type: ObjectId, ref: "Tradesman" },
         bookingId: { type: ObjectId, ref: "Booking" },

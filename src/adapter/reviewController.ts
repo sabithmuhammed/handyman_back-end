@@ -34,4 +34,44 @@ export default class ReviewController {
             next(error);
         }
     }
+
+    async editReview(req: Req, res: Res, next: Next) {
+        try {
+            const { reviewId } = req.params;
+            const { review, rating } = req.body;
+            const result = await this.reviewUsecase.editReview(
+                reviewId,
+                review,
+                rating
+            );
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+    async getTradesmanReviews(req: Req, res: Res, next: Next) {
+        try {
+            const { tradesmanId, limit, page } = req.query;
+            const result = await this.reviewUsecase.getReviewsForTradesman(
+                tradesmanId as string,
+                Number(limit),
+                Number(page)
+            );
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getSumAndCount(req: Req, res: Res, next: Next) {
+        try {
+            const { tradesmanId } = req.params;
+            console.log(tradesmanId);
+            
+            const result = await this.reviewUsecase.getSumAndCount(tradesmanId);
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
 }

@@ -175,22 +175,38 @@ export default class BookingRepository implements IBookingRepository {
         });
         return bookings;
     }
-    async getAllUserBookings(userId: string): Promise<Booking[]> {
+    async getAllUserBookings(
+        userId: string,
+        limit: number,
+        page: number
+    ): Promise<{ data: Booking[]; hasMore: boolean }> {
+        const skip = (page - 1) * limit;
+
         const bookings = await BookingModel.find({ userId })
-            .sort({
-                _id: -1,
-            })
+            .sort({ _id: -1 })
+            .skip(skip)
+            .limit(limit)
             .populate({
                 path: "tradesmanId",
                 select: "name profile",
             })
             .exec();
+
         await InvoiceModel.populate(bookings, {
             path: "invoice",
         });
 
-        return bookings;
+        const totalBookingsCount = await BookingModel.countDocuments({
+            userId,
+        });
+        const hasMore = skip + limit < totalBookingsCount;
+
+        return {
+            data: bookings,
+            hasMore,
+        };
     }
+
     async addInvoice(id: string, invoice: string): Promise<Booking | null> {
         const booking = await BookingModel.findByIdAndUpdate(
             id,

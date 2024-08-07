@@ -108,7 +108,8 @@ export default class BookingController {
     async getUserBooking(req: Req, res: Res, next: Next) {
         try {
             const userId = (req as any)?.user;
-            const result = await this.bookingUsecase.getUserBookings(userId);
+            const {limit,page} = req.query
+            const result = await this.bookingUsecase.getUserBookings(userId,Number(limit),Number(page));
             res.status(result.status).json(result.data);
         } catch (error) {
             next(error);

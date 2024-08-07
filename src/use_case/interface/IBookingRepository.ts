@@ -13,7 +13,7 @@ export default interface IBookingRepository {
     getScheduledBooking(tradesmanId: string,date:string): Promise<Booking[]>;
     changeToCompleted(bookingId: string): Promise<Booking | null>;
     getCompletedBookings(tradesmanId: string,date:string): Promise<Booking[]>;
-    getAllUserBookings(userId: string): Promise<Booking[]>;
+    getAllUserBookings(userId: string, limit: number, page: number): Promise<{data:Booking[],hasMore:boolean}>;
     addInvoice(id: string, invoice: string): Promise<Booking | null>;
     getUnavailableSlots(tradesmanId: string, date: string): Promise<any[]>;
     changePaymentStatus(bookingId: string): Promise<Booking | null>;
