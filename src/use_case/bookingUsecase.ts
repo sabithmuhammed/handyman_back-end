@@ -113,8 +113,10 @@ export default class BookingUsecase {
         };
     }
 
-    async getUserBookings(userId: string) {
-        const result = await this.bookingRepository.getAllUserBookings(userId);
+    async getUserBookings(userId: string,
+        limit: number,
+        page: number) {
+        const result = await this.bookingRepository.getAllUserBookings(userId,limit,page);
         return {
             status: STATUS_CODES.OK,
             data: result,

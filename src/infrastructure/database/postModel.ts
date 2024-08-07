@@ -3,7 +3,7 @@ import { ObjectId } from "mongodb";
 import Post from "../../domain/post";
 
 const PostSchema: Schema = new Schema<Post | Document>({
-    text: { type: String },
+    text: { type: String, trim:true },
     image: { type: String },
     date: { type: Date },
     tradesmanId: { type: ObjectId, ref: "Tradesman" },

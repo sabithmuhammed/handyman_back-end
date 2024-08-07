@@ -1,4 +1,3 @@
-import { config } from "dotenv";
 import Tradesman from "../domain/tradesman";
 import { STATUS_CODES } from "../infrastructure/constants/httpStatusCodes";
 import ROLES from "../infrastructure/constants/roles";
@@ -146,7 +145,6 @@ export default class TradesmanUsecase {
                 experience,
                 location,
                 category,
-                rating,
                 configuration
             } = result;
             return {
@@ -158,7 +156,6 @@ export default class TradesmanUsecase {
                     experience,
                     location,
                     category,
-                    rating,
                     configuration
                 },
             };

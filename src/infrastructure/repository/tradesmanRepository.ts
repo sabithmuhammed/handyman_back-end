@@ -41,45 +41,6 @@ export default class TradesmanRepository implements ITradesmanRepository {
         return tradesman;
     }
 
-    // async getAllTradesmanWithFilter(
-    //     page: number | undefined,
-    //     pageSize: number | undefined,
-    //     filters: FilterType
-    // ): Promise<{
-    //     tradesmen: Tradesman[] | null;
-    //     totalCount: number;
-    //     page: number;
-    // }> {
-    //     let tradesmen: Tradesman[] | null = null;
-    //     const offset =
-    //         (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
-    //     const totalCount = await TradesmanModel.countDocuments({
-    //         verificationStatus: "verified",
-    //         skills: { $regex: ".*" + filters.category + ".*", $options: "i" },
-    //     });
-
-    //     tradesmen = await TradesmanModel.find({
-    //         verificationStatus: "verified",
-    //         category: { $regex: ".*" + filters.category + ".*", $options: "i" },
-    //         location: {
-    //             $near: {
-    //                 $geometry: {
-    //                     type: "Point",
-    //                     coordinates: filters.coordinates,
-    //                 },
-    //                 $maxDistance: 10000,
-    //             },
-    //         },
-    //     })
-    //         .skip(offset)
-    //         .limit(pageSize ? Number(pageSize) : 10);
-
-    //     return {
-    //         tradesmen,
-    //         totalCount,
-    //         page: page ? Number(page) : 1,
-    //     };
-    // }
 
     async getAllTradesmanWithFilter(
         page: number | undefined,
@@ -93,23 +54,6 @@ export default class TradesmanRepository implements ITradesmanRepository {
         const offset =
             (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
         const limit = pageSize ? Number(pageSize) : 10;
-
-        const selectedDate = filters.date
-            ? new Date(filters.date).toISOString().split("T")[0]
-            : null;
-        const dayOfWeek = selectedDate
-            ? (new Date(selectedDate).getUTCDay() + 1) % 7
-            : null; // Get day of week (0-6), with Sunday as 0
-
-        // verificationStatus: "verified",
-        //             ...(filters.category && { category: { $regex: ".*" + filters.category + ".*", $options: "i" } }),
-        //             ...(filters.coordinates && filters.coordinates.length === 2 && {
-        //                 location: {
-        //                     $geoWithin: {
-        //                         $centerSphere: [filters.coordinates, 10000 / 6378100] // 10000 meters in radians
-        //                     }
-        //                 }
-        //             }),
 
         let pipeline: any[] = [
             {
@@ -180,7 +124,6 @@ export default class TradesmanRepository implements ITradesmanRepository {
                         "configuration.workingDays": 1,
                         verificationStatus: 1,
                         isBlocked: 1,
-                        rating: 1,
                         // Convert times to minutes
                         startMinutes: {
                             $sum: [

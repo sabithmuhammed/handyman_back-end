@@ -26,12 +26,6 @@ const TradesmanSchema: Schema = new Schema<Tradesman | Document>({
             required: true,
         },
     },
-    rating: [
-        {
-            rating: Number,
-            userId: String,
-        },
-    ],
     configuration: {
         startingTime: { type: String, default: "09:00" },
         endingTime: { type: String, default: "17:00" },
