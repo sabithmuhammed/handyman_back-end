@@ -13,18 +13,27 @@ export default interface Tradesman {
         coordinates: [number, number];
         type: "Point";
     };
-    configuration?: {
-        startingTime: string;
-        endingTime: string;
-        slotSize: number;
-        bufferTime: number;
-        workingDays: boolean[];
-        services: {
-            description: string;
-            amount: number;
-            slots: number;
-        }[];
-    };
+    configuration?: Configuration;
     verificationStatus?: "pending" | "rejected" | "verified";
     isBlocked?: boolean;
+}
+
+export interface WorkingDay {
+    start: string;
+    end: string;
+    isWorking: boolean;
+}
+
+export interface Service {
+    description: string;
+    amount: number;
+    slots: number;
+}
+
+export interface Configuration {
+    workingDays: WorkingDay[];
+    slotSize: number;
+    bufferTime: number;
+    services: Service[];
+    leaves: { date: string | Date; reason: string }[];
 }

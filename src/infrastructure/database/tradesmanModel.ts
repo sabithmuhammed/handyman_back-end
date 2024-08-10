@@ -2,6 +2,24 @@ import mongoose, { Schema, Document, Model, Mixed } from "mongoose";
 import Tradesman from "../../domain/tradesman";
 import { ObjectId } from "mongodb";
 
+const workingDaySchema: Schema = new Schema({
+    start: {
+        type: String,
+        default: "09:00",
+        required: true,
+    },
+    end: {
+        type: String,
+        default: "17:00",
+        required: true,
+    },
+    isWorking: {
+        type: Boolean,
+        default: false,
+        required: true,
+    },
+});
+
 const TradesmanSchema: Schema = new Schema<Tradesman | Document>({
     name: {
         type: String,
@@ -27,11 +45,17 @@ const TradesmanSchema: Schema = new Schema<Tradesman | Document>({
         },
     },
     configuration: {
-        startingTime: { type: String, default: "09:00" },
-        endingTime: { type: String, default: "17:00" },
         workingDays: {
-            type: [Boolean],
-            default: [false, true, true, true, true, true, true],
+            type: [workingDaySchema],
+            default: [
+                { isWorking: false, start: "09:00", end: "17:00" },
+                { isWorking: true, start: "09:00", end: "17:00" },
+                { isWorking: true, start: "09:00", end: "17:00" },
+                { isWorking: true, start: "09:00", end: "17:00" },
+                { isWorking: true, start: "09:00", end: "17:00" },
+                { isWorking: true, start: "09:00", end: "17:00" },
+                { isWorking: true, start: "09:00", end: "17:00" },
+            ],
         },
         slotSize: { type: Number, default: 1 },
         bufferTime: { type: Number, default: 15 },
@@ -40,6 +64,14 @@ const TradesmanSchema: Schema = new Schema<Tradesman | Document>({
                 description: { type: String },
                 amount: { type: Number },
                 slots: { type: Number },
+            },
+        ],
+        leaves: [
+            {
+                date: { type: Date },
+                reason: {
+                    type: String,
+                },
             },
         ],
     },

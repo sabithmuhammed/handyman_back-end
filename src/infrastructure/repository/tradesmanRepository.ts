@@ -1,7 +1,6 @@
-import Tradesman from "../../domain/tradesman";
+import Tradesman, { Service, WorkingDay } from "../../domain/tradesman";
 import TradesmanModel from "../database/tradesmanModel";
 import ITradesmanRepository, {
-    ConfigurationType,
     FilterType,
     VerificationType,
 } from "../../use_case/interface/ITradesmanRepository";
@@ -41,7 +40,6 @@ export default class TradesmanRepository implements ITradesmanRepository {
         return tradesman;
     }
 
-
     async getAllTradesmanWithFilter(
         page: number | undefined,
         pageSize: number | undefined,
@@ -51,186 +49,105 @@ export default class TradesmanRepository implements ITradesmanRepository {
         totalCount: number;
         page: number;
     }> {
-        const offset =
-            (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
+        console.log("Filters received:", JSON.stringify(filters, null, 2));
+    
+        const offset = (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
         const limit = pageSize ? Number(pageSize) : 10;
-
+    
         let pipeline: any[] = [
             {
                 $match: {
-                    category: {
+                    category: filters.category ? {
                         $regex: ".*" + filters.category + ".*",
                         $options: "i",
-                    },
+                    } : { $exists: true },
                     location: {
                         $geoWithin: {
                             $centerSphere: [
                                 filters.coordinates,
                                 10000 / 6378100,
-                            ], // 10000 meters in radians
+                            ],
                         },
                     },
                 },
             },
-            { $skip: offset },
-            { $limit: limit },
         ];
+    
         if (filters.date) {
             const date = new Date(filters.date);
-            const dayOfWeek = date.getDay();
-            const startDate = new Date(filters.date);
-            const endDate = new Date(filters.date);
-            startDate.setHours(0, 0, 0, 0);
-            endDate.setHours(23, 59, 59, 999);
-            
+            console.log("Parsed date:", date);
+            const dayOfWeek = date.getUTCDay();
+            const startOfDay = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+            const endOfDay = new Date(startOfDay);
+            endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
+    
             pipeline = [
+                ...pipeline,
                 {
                     $match: {
-                        category: {
-                            $regex: ".*" + filters.category + ".*",
-                            $options: "i",
-                        },
-                        location: {
-                            $geoWithin: {
-                                $centerSphere: [
-                                    filters.coordinates,
-                                    10000 / 6378100,
-                                ], // 10000 meters in radians
-                            },
-                        },
                         $expr: {
-                            $eq: [
+                            $and: [
+                                { $eq: [{ $arrayElemAt: ["$configuration.workingDays.isWorking", dayOfWeek] }, true] },
                                 {
-                                    $arrayElemAt: [
-                                        "$configuration.workingDays",
-                                        dayOfWeek,
-                                    ],
-                                },
-                                true,
-                            ],
-                        },
-                    },
+                                    $not: {
+                                        $anyElementTrue: {
+                                            $map: {
+                                                input: "$configuration.leaves",
+                                                as: "leave",
+                                                in: {
+                                                    $and: [
+                                                        { $gte: ["$$leave.date", startOfDay] },
+                                                        { $lt: ["$$leave.date", endOfDay] }
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
                 },
                 {
-                    $project: {
-                        name: 1,
-                        category: 1,
-                        experience: 1,
-                        location: 1,
-                        "configuration.startingTime": 1,
-                        "configuration.endingTime": 1,
-                        "configuration.bufferTime": 1,
-                        "configuration.slotSize": 1,
-                        "configuration.workingDays": 1,
-                        verificationStatus: 1,
-                        isBlocked: 1,
-                        // Convert times to minutes
+                    $addFields: {
+                        workingHours: { $arrayElemAt: ["$configuration.workingDays", dayOfWeek] },
+                        slotSize: "$configuration.slotSize",
+                        bufferTime: "$configuration.bufferTime"
+                    }
+                },
+                {
+                    $addFields: {
                         startMinutes: {
                             $sum: [
-                                {
-                                    $multiply: [
-                                        {
-                                            $toInt: {
-                                                $substr: [
-                                                    "$configuration.startingTime",
-                                                    0,
-                                                    2,
-                                                ],
-                                            },
-                                        },
-                                        60,
-                                    ],
-                                },
-                                {
-                                    $toInt: {
-                                        $substr: [
-                                            "$configuration.startingTime",
-                                            3,
-                                            2,
-                                        ],
-                                    },
-                                },
-                            ],
+                                { $multiply: [{ $toInt: { $substr: ["$workingHours.start", 0, 2] } }, 60] },
+                                { $toInt: { $substr: ["$workingHours.start", 3, 2] } }
+                            ]
                         },
                         endMinutes: {
                             $sum: [
-                                {
-                                    $multiply: [
-                                        {
-                                            $toInt: {
-                                                $substr: [
-                                                    "$configuration.endingTime",
-                                                    0,
-                                                    2,
-                                                ],
-                                            },
-                                        },
-                                        60,
-                                    ],
-                                },
-                                {
-                                    $toInt: {
-                                        $substr: [
-                                            "$configuration.endingTime",
-                                            3,
-                                            2,
-                                        ],
-                                    },
-                                },
-                            ],
-                        },
-                    },
+                                { $multiply: [{ $toInt: { $substr: ["$workingHours.end", 0, 2] } }, 60] },
+                                { $toInt: { $substr: ["$workingHours.end", 3, 2] } }
+                            ]
+                        }
+                    }
                 },
                 {
                     $addFields: {
-                        totalWorkingMinutes: {
-                            $subtract: ["$endMinutes", "$startMinutes"],
-                        },
-                        workingDaysCount: {
-                            $size: {
-                                $filter: {
-                                    input: "$configuration.workingDays",
-                                    as: "day",
-                                    cond: { $eq: ["$$day", true] },
-                                },
-                            },
-                        },
-                    },
+                        totalWorkingMinutes: { $subtract: ["$endMinutes", "$startMinutes"] },
+                        slotSizeMinutes: { $multiply: ["$slotSize", 60] }
+                    }
                 },
                 {
                     $addFields: {
-                        adjustedWorkingMinutes: {
-                            $subtract: [
-                                "$totalWorkingMinutes",
-                                "$configuration.bufferTime",
-                            ],
-                        },
-                        slotSizeMinutes: {
-                            $multiply: ["$configuration.slotSize", 60],
-                        },
-                    },
-                },
-                {
-                    $addFields: {
-                        slots: {
+                        availableSlots: {
                             $floor: {
                                 $divide: [
-                                    "$adjustedWorkingMinutes",
-                                    "$slotSizeMinutes",
-                                ],
-                            },
-                        },
-                    },
-                },
-                {
-                    $project: {
-                        startMinutes: 0,
-                        endMinutes: 0,
-                        totalWorkingMinutes: 0,
-                        adjustedWorkingMinutes: 0,
-                        slotSizeMinutes: 0,
-                        workingDaysCount: 0,
-                    },
+                                    { $subtract: ["$totalWorkingMinutes", "$bufferTime"] },
+                                    "$slotSizeMinutes"
+                                ]
+                            }
+                        }
+                    }
                 },
                 {
                     $lookup: {
@@ -241,56 +158,69 @@ export default class TradesmanRepository implements ITradesmanRepository {
                                 $match: {
                                     $expr: {
                                         $and: [
-                                            {
-                                                $eq: [
-                                                    "$tradesmanId",
-                                                    "$$tradesmanId",
-                                                ],
-                                            },
-                                            { $gte: ["$bookingDate", startDate] }, // Replace with the date you want to filter by
-                                            { $lte: ["$bookingDate", endDate] },
-                                        ],
-                                    },
-                                },
-                            },
+                                            { $eq: ["$tradesmanId", "$$tradesmanId"] },
+                                            { $gte: ["$bookingDate", startOfDay] },
+                                            { $lt: ["$bookingDate", endOfDay] }
+                                        ]
+                                    }
+                                }
+                            }
                         ],
-                        as: "bookings",
-                    },
-                },
-                {
-                    $addFields: { slots: { $subtract: ["$slots", 1] } },
+                        as: "bookings"
+                    }
                 },
                 {
                     $addFields: {
-                        bookingCount: { $size: "$bookings" }, // Add a field to store the size of the bookings array
-                    },
+                        bookingCount: { $size: "$bookings" },
+                        remainingSlots: { $subtract: ["$availableSlots", { $size: "$bookings" }] }
+                    }
                 },
                 {
                     $match: {
                         $expr: {
-                            $lt: ["$bookingCount", "$slots"], // Compare the size of bookings with the slots field
-                        },
-                    },
+                            $gt: ["$remainingSlots", 0]
+                        }
+                    }
                 },
                 {
                     $project: {
-                        bookingCount: 0,
-                        slots: 0,
-                        bookings: 0,
-                    },
-                },
-                { $skip: offset },
-                { $limit: limit },
+                        name: 1,
+                        profile: 1,
+                        experience: 1,
+                        category: 1,
+                        location: 1,
+                        configuration: 1,
+                        verificationStatus: 1,
+                        isBlocked: 1,
+                        availableSlots: 1,
+                        bookingCount: 1,
+                        remainingSlots: 1
+                    }
+                }
             ];
         }
-
+    
+        // Add pagination stages
+        pipeline.push(
+            { $skip: offset },
+            { $limit: limit }
+        );
+    
+        console.log("Final pipeline:", JSON.stringify(pipeline, null, 2));
+    
         // Execute the aggregation pipeline
         const tradesmen = await TradesmanModel.aggregate(pipeline);
-
-        // Get the total count of tradesmen matching the initial filters
-        const totalCount = await TradesmanModel.countDocuments(pipeline);
-console.log(totalCount);
-
+        console.log("Tradesmen found:", tradesmen.length);
+        console.log("First tradesman:", JSON.stringify(tradesmen[0], null, 2));
+    
+        // Get the total count of tradesmen matching the filters (without pagination)
+        const countPipeline = pipeline.slice(0, -2);  // Remove skip and limit stages
+        countPipeline.push({ $count: "totalCount" });
+        const countResult = await TradesmanModel.aggregate(countPipeline);
+        const totalCount = countResult.length > 0 ? countResult[0].totalCount : 0;
+    
+        console.log("Total count:", totalCount);
+    
         return {
             tradesmen,
             totalCount,
@@ -360,7 +290,7 @@ console.log(totalCount);
         })
             .skip(offset)
             .limit(pageSize ? Number(pageSize) : 10);
-console.log(tradesmen);
+        console.log(tradesmen);
 
         return {
             tradesmen,
@@ -372,15 +302,123 @@ console.log(tradesmen);
         const tradesman = await TradesmanModel.findById(tradesmanId);
         return tradesman;
     }
-    async updateConfiguration(
+
+    // async updateConfiguration(
+    //     tradesmanId: string,
+    //     config: ConfigurationType
+    // ): Promise<Tradesman | null> {
+    //     const tradesman = await TradesmanModel.findByIdAndUpdate(
+    //         tradesmanId,
+    //         {
+    //             $set: {
+    //                 configuration: config,
+    //             },
+    //         },
+    //         { new: true }
+    //     );
+    //     return tradesman;
+    // }
+
+    async updateWorkingTime(
         tradesmanId: string,
-        config: ConfigurationType
+        workingDays: WorkingDay[],
+        slotSize: number,
+        bufferTime: number
     ): Promise<Tradesman | null> {
         const tradesman = await TradesmanModel.findByIdAndUpdate(
             tradesmanId,
             {
                 $set: {
-                    configuration: config,
+                    "configuration.workingDays": workingDays,
+                    "configuration.slotSize": slotSize,
+                    "configuration.bufferTime": bufferTime,
+                },
+            },
+            { new: true }
+        );
+        return tradesman;
+    }
+
+    async addService(
+        tradesmanId: string,
+        service: Service
+    ): Promise<Tradesman | null> {
+        const tradesman = await TradesmanModel.findByIdAndUpdate(
+            tradesmanId,
+            {
+                $push: {
+                    "configuration.services": service,
+                },
+            },
+            { new: true }
+        );
+        return tradesman;
+    }
+
+    async deleteService(
+        tradesmanId: string,
+        serviceId: string
+    ): Promise<Tradesman | null> {
+        const tradesman = await TradesmanModel.findByIdAndUpdate(
+            tradesmanId,
+            {
+                $pull: {
+                    "configuration.services": { _id: serviceId },
+                },
+            },
+            { new: true }
+        );
+        return tradesman;
+    }
+    async updateService(
+        tradesmanId: string,
+        serviceId: string,
+        service: Service
+    ): Promise<Tradesman | null> {
+        const tradesman = await TradesmanModel.findOneAndUpdate(
+            { _id: tradesmanId, "configuration.services._id": serviceId },
+            {
+                $set: {
+                    "configuration.services.$": { ...service, _id: serviceId },
+                },
+            },
+            { new: true }
+        );
+        return tradesman;
+    }
+    async addLeave(
+        tradesmaId: string,
+        leaves: { date: string; reason: string }[]
+    ): Promise<Tradesman | null> {
+        const tradesman = await TradesmanModel.findByIdAndUpdate(
+            tradesmaId,
+            {
+                $addToSet: {
+                    "configuration.leaves": { $each: leaves },
+                },
+            },
+            { new: true }
+        );
+        return tradesman;
+    }
+    async removeLeave(
+        tradesmanId: string,
+        date: string
+    ): Promise<Tradesman | null> {
+        const dateToRemove = new Date(date);
+
+        const tradesman = await TradesmanModel.findByIdAndUpdate(
+            tradesmanId,
+            {
+                $pull: {
+                    "configuration.leaves": {
+                        date: {
+                            $gte: new Date(dateToRemove.setHours(0, 0, 0, 0)),
+                            $lt: new Date(
+                                dateToRemove.setHours(23, 59, 59, 999)
+                            ),
+                        },
+                    },
                 },
             },
             { new: true }

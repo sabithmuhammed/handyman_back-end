@@ -108,8 +108,12 @@ export default class BookingController {
     async getUserBooking(req: Req, res: Res, next: Next) {
         try {
             const userId = (req as any)?.user;
-            const {limit,page} = req.query
-            const result = await this.bookingUsecase.getUserBookings(userId,Number(limit),Number(page));
+            const { limit, page } = req.query;
+            const result = await this.bookingUsecase.getUserBookings(
+                userId,
+                Number(limit),
+                Number(page)
+            );
             res.status(result.status).json(result.data);
         } catch (error) {
             next(error);
@@ -209,4 +213,34 @@ export default class BookingController {
             next(error);
         }
     }
+
+    async checkBookingsByDates(req: Req, res: Res, next: Next) {
+        try {
+            const tradesmanId = (req as any)?.tradesman;
+            const { leaves } = req.query;
+    
+            // Map the array of dates to an array of promises
+            const bookingPromises = (leaves as string[]).map(async (date: string) => {
+                const { data } = await this.bookingUsecase.checkBookingForDate(tradesmanId, date);
+                return data === 0;
+            });
+    
+            // Wait for all promises to resolve
+            const results = await Promise.all(bookingPromises);
+    
+            // Determine if all dates have no bookings
+            const hasNoBookings = results.every((result) => result === true);
+    
+            if (hasNoBookings) {
+                res.status(STATUS_CODES.OK).json({ status: "success" });
+            } else {
+                res.status(STATUS_CODES.CONFLICT).json(
+                    "Cannot add leave. Some selected dates contain pending bookings"
+                );
+            }
+        } catch (error) {
+            next(error);
+        }
+    }
+    
 }

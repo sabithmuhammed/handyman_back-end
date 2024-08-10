@@ -1,4 +1,4 @@
-import Tradesman from "../../domain/tradesman";
+import Tradesman, { Service, WorkingDay } from "../../domain/tradesman";
 
 export default interface ITradesmanRepository {
     saveTradesman(tradesman: Tradesman): Promise<Tradesman>;
@@ -32,7 +32,35 @@ export default interface ITradesmanRepository {
         page: number;
     }>;
 
-    updateConfiguration(tradesmanId:string,config: ConfigurationType): Promise<Tradesman | null>;
+    updateWorkingTime(
+        tradesmanId: string,
+        workingDays: WorkingDay[],
+        slotSize: number,
+        bufferTime: number
+    ): Promise<Tradesman | null>;
+
+    addService(
+        tradesmanId: string,
+        service: Service
+    ): Promise<Tradesman | null>;
+    deleteService(
+        tradesmanId: string,
+        serviceId: string
+    ): Promise<Tradesman | null>;
+    updateService(
+        tradesmanId: string,
+        serviceId: string,
+        service: Service
+    ): Promise<Tradesman | null>;
+
+    addLeave(
+        tradesmaId: string,
+        leaves: { date: string; reason: string }[]
+    ): Promise<Tradesman | null>;
+
+    removeLeave(tradesmanId: string, date: string): Promise<Tradesman | null>;
+
+    // updateConfiguration(tradesmanId:string,config: ConfigurationType): Promise<Tradesman | null>;
 }
 
 export type VerificationType = "pending" | "verified" | "rejected";
@@ -41,17 +69,4 @@ export type FilterType = {
     category: string;
     coordinates: [number, number];
     date: string;
-};
-
-export type ConfigurationType = {
-    startingTime: string;
-    endingTime: string;
-    slotSize: number;
-    bufferTime: number;
-    workingDays: boolean[];
-    services: {
-        description: string;
-        amount: number;
-        slots: number;
-    }[];
 };

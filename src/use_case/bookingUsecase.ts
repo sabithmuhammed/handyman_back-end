@@ -9,14 +9,15 @@ export default class BookingUsecase {
         private generateUniqueId: typeof GenerateUniqueId
     ) {}
     async addNewBooking(booking: Booking) {
-        // const alreadyBooked = await this.bookingRepository.checkAvailability(
-        //     booking.tradesmanId as string,
-        //     new Date(booking.bookingDate)
-        // );
-        if (false /*alreadyBooked*/) {
+        const alreadyBooked = await this.bookingRepository.checkAvailability(
+            booking.tradesmanId as string,
+            new Date(booking.bookingDate),
+            booking.slots
+        );
+        if (!alreadyBooked) {
             return {
                 status: STATUS_CODES.CONFLICT,
-                data: "This date is unavailable. Please select other dates",
+                data: "One or more slots are unavailable",
             };
         }
         booking.bookingNumber = this.generateUniqueId({
@@ -113,10 +114,12 @@ export default class BookingUsecase {
         };
     }
 
-    async getUserBookings(userId: string,
-        limit: number,
-        page: number) {
-        const result = await this.bookingRepository.getAllUserBookings(userId,limit,page);
+    async getUserBookings(userId: string, limit: number, page: number) {
+        const result = await this.bookingRepository.getAllUserBookings(
+            userId,
+            limit,
+            page
+        );
         return {
             status: STATUS_CODES.OK,
             data: result,
@@ -186,5 +189,16 @@ export default class BookingUsecase {
             status: STATUS_CODES.OK,
             data: result,
         };
+    }
+
+    async checkBookingForDate(tradesmanId: string, date: string) {
+        const result = await this.bookingRepository.checkBookingForDate(
+            tradesmanId,
+            date
+        );
+        return {
+            status:STATUS_CODES.OK,
+            data:result
+        }
     }
 }

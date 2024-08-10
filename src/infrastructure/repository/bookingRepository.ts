@@ -63,22 +63,29 @@ export default class BookingRepository implements IBookingRepository {
         return [];
     }
 
-    async checkAvailability(tradesmanId: string, date: Date): Promise<boolean> {
+    async  checkAvailability(
+        tradesmanId: string,
+        date: Date,
+        slots: string[]
+    ): Promise<boolean> {
         const startOfDay = new Date(date.setHours(0, 0, 0, 0));
         const endOfDay = new Date(date.setHours(23, 59, 59, 999));
-
-        const result = await BookingModel.find({
+    
+        // Query to find if there's a booking for the tradesman on the specified date where any of the slots overlap
+        const result = await BookingModel.findOne({
             tradesmanId,
-            scheduledDate: {
-                $elemMatch: {
-                    $gte: startOfDay,
-                    $lte: endOfDay,
-                },
+            bookingDate: {
+                $gte: startOfDay,
+                $lte: endOfDay,
             },
+            slots: { $in: slots }, // Check if any of the slots in the array are already booked
         });
-
-        return result.length !== 0;
+    
+        // If result is found, at least one of the slots is unavailable
+        return result === null;
     }
+    
+    
 
     async rejectBooking(bookingId: string): Promise<Booking | null> {
         const result = await BookingModel.findByIdAndUpdate(
@@ -433,5 +440,30 @@ export default class BookingRepository implements IBookingRepository {
         ];
 
         return await BookingModel.aggregate(pipeline).exec();
+    }
+
+    async checkBookingForDate(
+        tradesmanId: string,
+        date: string
+    ): Promise<number> {
+        const startDate = new Date(date);
+        const endDate = new Date(date);
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(23, 59, 59, 999);
+        const query = {
+            tradesmanId,
+            $and: [
+                {
+                    bookingDate: {
+                        $gte: startDate,
+                        $lte: endDate,
+                    },
+                },
+            ],
+        };
+
+        const count = await BookingModel.find(query).countDocuments();
+        
+        return count;
     }
 }

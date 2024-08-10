@@ -1,9 +1,9 @@
-import Tradesman from "../domain/tradesman";
+import Tradesman, { Service, WorkingDay } from "../domain/tradesman";
 import { STATUS_CODES } from "../infrastructure/constants/httpStatusCodes";
 import ROLES from "../infrastructure/constants/roles";
 import TradesmanRepository from "../infrastructure/repository/tradesmanRepository";
 import JwtCreate from "../infrastructure/utils/jwtCreate";
-import { ConfigurationType, FilterType, VerificationType } from "./interface/ITradesmanRepository";
+import { FilterType, VerificationType } from "./interface/ITradesmanRepository";
 
 export default class TradesmanUsecase {
     constructor(
@@ -145,7 +145,7 @@ export default class TradesmanUsecase {
                 experience,
                 location,
                 category,
-                configuration
+                configuration,
             } = result;
             return {
                 status: STATUS_CODES.OK,
@@ -156,7 +156,7 @@ export default class TradesmanUsecase {
                     experience,
                     location,
                     category,
-                    configuration
+                    configuration,
                 },
             };
         }
@@ -190,8 +190,92 @@ export default class TradesmanUsecase {
         };
     }
 
-    async updateConfiguration(tradesmanId: string,config:ConfigurationType) {
-        const data = await this.tradesmanRepository.updateConfiguration(tradesmanId,config);
+    // async updateConfiguration(tradesmanId: string,config:ConfigurationType) {
+    //     const data = await this.tradesmanRepository.updateConfiguration(tradesmanId,config);
+    //     return {
+    //         status: STATUS_CODES.OK,
+    //         data,
+    //     };
+    // }
+
+    async updateWorkingTIme(
+        tradesmanId: string,
+        workingDays: WorkingDay[],
+        slotSize: number,
+        bufferTime: number
+    ) {
+        const data = await this.tradesmanRepository.updateWorkingTime(
+            tradesmanId,
+            workingDays,
+            slotSize,
+            bufferTime
+        );
+        return {
+            status: STATUS_CODES.OK,
+            data,
+        };
+    }
+
+    async addService(tradesmanId: string, service: Service) {
+        const data = await this.tradesmanRepository.addService(
+            tradesmanId,
+            service
+        );
+        return {
+            status: STATUS_CODES.OK,
+            data,
+        };
+    }
+
+    async deleteService(tradesmanId: string, serviceId: string) {
+        const data = await this.tradesmanRepository.deleteService(
+            tradesmanId,
+            serviceId
+        );
+        return {
+            status: STATUS_CODES.OK,
+            data,
+        };
+    }
+
+    async updateService(
+        tradesmanId: string,
+        serviceId: string,
+        service: Service
+    ) {
+        const data = await this.tradesmanRepository.updateService(
+            tradesmanId,
+            serviceId,
+            service
+        );
+        return {
+            status: STATUS_CODES.OK,
+            data,
+        };
+    }
+
+    async addLeave(
+        tradesmanId: string,
+        leaves: { date: string; reason: string }[]
+    ) {
+        const data = await this.tradesmanRepository.addLeave(
+            tradesmanId,
+            leaves
+        );
+        return {
+            status: STATUS_CODES.OK,
+            data,
+        };
+    }
+
+    async removeLeave(
+        tradesmanId: string,
+        date:string
+    ) {
+        const data = await this.tradesmanRepository.removeLeave(
+            tradesmanId,
+            date
+        );
         return {
             status: STATUS_CODES.OK,
             data,

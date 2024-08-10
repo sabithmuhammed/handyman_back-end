@@ -26,10 +26,8 @@ const tradesmanUsecase = new TradesmanUsecase(tradesmanRepository, jwtCreate);
 const controller = new TradesmanController(
     tradesmanUsecase,
     cloudinary,
-    fileOperations,
+    fileOperations
 );
-
-
 
 tradesmanRouter.post(
     "/register",
@@ -44,23 +42,60 @@ tradesmanRouter.get(
         controller.tradesmanExistCheck(req, res, next)
 );
 
-
 tradesmanRouter.get(
     "/get-profile/:tradesmanId",
-    (req: Req, res: Res, next: Next) => controller.getProfileMinimum(req, res, next)
+    (req: Req, res: Res, next: Next) =>
+        controller.getProfileMinimum(req, res, next)
 );
 
 tradesmanRouter.get(
     "/get-profile-full",
     tradesmanAuth,
-    (req: Req, res: Res, next: Next) => controller.getProfileFull(req, res, next)
+    (req: Req, res: Res, next: Next) =>
+        controller.getProfileFull(req, res, next)
+);
+
+// tradesmanRouter.patch(
+//     "/update-configuration",
+//     tradesmanAuth,
+//     (req: Req, res: Res, next: Next) => controller.updateConfiguration(req, res, next)
+// );
+
+tradesmanRouter.patch(
+    "/update-working-time",
+    tradesmanAuth,
+    (req: Req, res: Res, next: Next) =>
+        controller.updateWorkingTime(req, res, next)
 );
 
 tradesmanRouter.patch(
-    "/update-configuration",
+    "/add-service",
     tradesmanAuth,
-    (req: Req, res: Res, next: Next) => controller.updateConfiguration(req, res, next)
+    (req: Req, res: Res, next: Next) => controller.addNewService(req, res, next)
 );
 
+tradesmanRouter.delete(
+    "/delete-service/:serviceId",
+    tradesmanAuth,
+    (req: Req, res: Res, next: Next) => controller.deleteService(req, res, next)
+);
+
+tradesmanRouter.patch(
+    "/update-service/:serviceId",
+    tradesmanAuth,
+    (req: Req, res: Res, next: Next) => controller.updateService(req, res, next)
+);
+
+tradesmanRouter.patch(
+    "/add-leave",
+    tradesmanAuth,
+    (req: Req, res: Res, next: Next) => controller.addLeave(req, res, next)
+);
+
+tradesmanRouter.delete(
+    "/remove-leave/:date",
+    tradesmanAuth,
+    (req: Req, res: Res, next: Next) => controller.removeLeave(req, res, next)
+);
 
 export default tradesmanRouter;

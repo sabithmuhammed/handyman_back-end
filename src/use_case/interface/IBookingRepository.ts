@@ -8,7 +8,7 @@ export default interface IBookingRepository {
         scheduledDate: Date[]
     ): Promise<Booking | null>;
     getScheduledDates(tradesmanId: string, startingDate: Date): Promise<Date[]>;
-    checkAvailability(tradesmanId: string, date: Date): Promise<boolean>;
+    checkAvailability(tradesmanId: string, date: Date,slot:string []): Promise<boolean>;
     rejectBooking(bookingId: string): Promise<Booking | null>;
     getScheduledBooking(tradesmanId: string,date:string): Promise<Booking[]>;
     changeToCompleted(bookingId: string): Promise<Booking | null>;
@@ -20,4 +20,5 @@ export default interface IBookingRepository {
     getBookingsCount(tradesmanId: string): Promise<any>;
     getServiceAndCount(tradesmanId:string,filter:string):Promise<any>
     getPaymentAggregation(tradesmanId:string,filter:string):Promise<any>
+    checkBookingForDate(tradesmanId:string,date:string):Promise<number>;
 }

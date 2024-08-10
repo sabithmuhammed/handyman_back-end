@@ -7,7 +7,7 @@ import Cloudinary from "../infrastructure/utils/cloudinary";
 import FileOperations from "../infrastructure/utils/fileOperations";
 import PostUsecase from "../use_case/postUsecase";
 import { REFRESH_TOKEN_MAX_AGE } from "../infrastructure/constants/constants";
-import { ConfigurationType } from "../use_case/interface/ITradesmanRepository";
+import BookingUsecase from "../use_case/bookingUsecase";
 
 export default class TradesmanController {
     constructor(
@@ -100,48 +100,94 @@ export default class TradesmanController {
         }
     }
 
-    async updateConfiguration(req: Req, res: Res, next: Next) {
+    async updateWorkingTime(req: Req, res: Res, next: Next) {
         try {
             const tradesmanId = (req as any)?.tradesman;
-            const {
-                startingTime,
-                endingTime,
-                bufferTime,
-                services,
-                slotSize,
-                workingDays,
-            }: ConfigurationType = req.body;
-            let hasError = false;
-            if (startingTime >= endingTime) {
-                hasError = true;
-            }
-            if (workingDays.every((day) => !day)) {
-                hasError = true;
-            }
-            if (Number(slotSize) < 0.5) {
-                hasError = true;
-            }
-            const allFilled = services.every(
-                (item) => item.description && item.amount && item.slots
-            );
-            if (!allFilled) {
-                hasError = true;
-            }
-            if (hasError) {
-                throw new Error("ValidationError");
-            }
-
-            const result = await this.tradesmanUsecase.updateConfiguration(
+            const { workingDays, slotSize, bufferTime } = req.body;
+            const result = await this.tradesmanUsecase.updateWorkingTIme(
                 tradesmanId,
-                {
-                    startingTime,
-                    endingTime,
-                    bufferTime:Number(bufferTime),
-                    services,
-                    slotSize:Number(slotSize),
-                    workingDays,
-                }
+                workingDays,
+                slotSize,
+                bufferTime
             );
+
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async addNewService(req: Req, res: Res, next: Next) {
+        try {
+            const tradesmanId = (req as any)?.tradesman;
+            const { service } = req.body;
+            const result = await this.tradesmanUsecase.addService(
+                tradesmanId,
+                service
+            );
+
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async deleteService(req: Req, res: Res, next: Next) {
+        try {
+            const tradesmanId = (req as any)?.tradesman;
+            const { serviceId } = req.params;
+            const result = await this.tradesmanUsecase.deleteService(
+                tradesmanId,
+                serviceId
+            );
+
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async updateService(req: Req, res: Res, next: Next) {
+        try {
+            const tradesmanId = (req as any)?.tradesman;
+            const { serviceId } = req.params;
+            const { service } = req.body;
+            const result = await this.tradesmanUsecase.updateService(
+                tradesmanId,
+                serviceId,
+                service
+            );
+
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async addLeave(req: Req, res: Res, next: Next) {
+        try {
+            const tradesmanId = (req as any)?.tradesman;
+            const { leaves, reason } = req.body;
+            const result = await this.tradesmanUsecase.addLeave(
+                tradesmanId,
+                leaves.map((date: string) => ({ date, reason }))
+            );
+
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async removeLeave(req: Req, res: Res, next: Next) {
+        try {
+            const tradesmanId = (req as any)?.tradesman;
+            const { date } = req.params;
+            const result = await this.tradesmanUsecase.removeLeave(
+                tradesmanId,
+                date
+            );
+
             res.status(result.status).json(result.data);
         } catch (error) {
             next(error);
