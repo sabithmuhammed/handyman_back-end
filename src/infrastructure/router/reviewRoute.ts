@@ -23,11 +23,11 @@ reviewRouter.patch("/edit-review/:reviewId", userAuth, (req, res, next) =>
     reviewController.editReview(req, res, next)
 );
 
-reviewRouter.get("/get-review-tradesman", userAuth, (req, res, next) =>
+reviewRouter.get("/get-review-tradesman", (req, res, next) =>
     reviewController.getTradesmanReviews(req, res, next)
 );
 
-reviewRouter.get("/get-review-details/:tradesmanId", userAuth, (req, res, next) =>
+reviewRouter.get("/get-review-details/:tradesmanId", (req, res, next) =>
     reviewController.getSumAndCount(req, res, next)
 );
 

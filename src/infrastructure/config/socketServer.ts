@@ -5,6 +5,7 @@ interface User {
     userId: string;
     socketId: string;
     online?: boolean;
+    lastSeen: Date | string;
 }
 
 export default function initializeSocket(server: any) {
@@ -25,21 +26,28 @@ export default function initializeSocket(server: any) {
         if (userExist) {
             userExist.socketId = socketId;
             userExist.online = true;
+            userExist.lastSeen = new Date();
         } else {
-            users.push({ userId, socketId, online: true });
+            users.push({
+                userId,
+                socketId,
+                online: true,
+                lastSeen: new Date(),
+            });
         }
-
         io.emit("userOnline", userId);
     };
 
     const removeUser = (socketId: string) => {
-        users.map((user) => {
+        users.forEach((user) => {
             if (user.socketId === socketId) {
-                io.emit("userOffline", user.userId);
-                return { ...user, online: false };
+                const lastSeen = new Date();
+                io.emit("userOffline", { userId: user.userId, lastSeen });
+                user.online = false;
+                user.lastSeen = lastSeen
             }
-            return user;
         });
+        console.log(users, "offline");
     };
 
     const getUser = (userId: string) =>
@@ -51,7 +59,7 @@ export default function initializeSocket(server: any) {
         const userId = socket.handshake.query.userId;
         const tradesmanId = socket.handshake.query.tradesmanId;
         addUser(userId as string, socket.id);
-        if (tradesmanId) {
+        if ((tradesmanId as string) != "null") {
             addUser(tradesmanId as string, socket.id);
         }
 
@@ -67,10 +75,20 @@ export default function initializeSocket(server: any) {
                 } else {
                     io.to(user.socketId).emit("newMessageUser", data.message);
                 }
-                io.to(user.socketId).emit("msg",{userId});
+                io.to(user.socketId).emit("msg", { userId });
             }
         });
+
+        socket.on("getLastSeen", (userId, ackCallback) => {
+            const user = getUser(userId);
+            ackCallback({
+                online: user?.online,
+                lastSeen: user?.lastSeen,
+            });
+            console.log(users, "ghhghj");
+        });
         socket.on("disconnect", () => {
+            removeUser(socket.id);
             console.log("User disconnected");
         });
     });

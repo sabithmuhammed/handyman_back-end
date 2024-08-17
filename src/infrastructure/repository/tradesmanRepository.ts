@@ -142,7 +142,7 @@ export default class TradesmanRepository implements ITradesmanRepository {
                         availableSlots: {
                             $floor: {
                                 $divide: [
-                                    { $subtract: ["$totalWorkingMinutes", "$bufferTime"] },
+                                    { $subtract: ["$totalWorkingMinutes", { $multiply: ["$bufferTime", { $subtract: [{ $divide: ["$totalWorkingMinutes", "$slotSizeMinutes"] }, 1] }] }] },
                                     "$slotSizeMinutes"
                                 ]
                             }

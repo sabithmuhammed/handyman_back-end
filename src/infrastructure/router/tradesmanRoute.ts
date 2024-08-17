@@ -55,11 +55,6 @@ tradesmanRouter.get(
         controller.getProfileFull(req, res, next)
 );
 
-// tradesmanRouter.patch(
-//     "/update-configuration",
-//     tradesmanAuth,
-//     (req: Req, res: Res, next: Next) => controller.updateConfiguration(req, res, next)
-// );
 
 tradesmanRouter.patch(
     "/update-working-time",
