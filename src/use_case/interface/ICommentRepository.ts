@@ -14,6 +14,7 @@ export default interface IConversationRepository {
     ): Promise<Comment | null>;
     deleteComment(commentId: string): Promise<Comment | null>;
     getComments(postId: string): Promise<Comment[]>;
-    getCommentCount(postId:string):Promise<number>
+    getCommentCount(postId:string):Promise<number>;
+    removeReply(commentId:string,replyId:string):Promise<Comment | null>
     
 }

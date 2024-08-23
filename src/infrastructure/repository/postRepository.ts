@@ -53,13 +53,22 @@ export default class PostRepository implements IPostRepository {
         return post;
     }
 
-    async getAllPosts(): Promise<Post[]> {
-        const posts = await PostModel.find().populate({
-            path: "tradesmanId",
-            select: "name profile",
-        });
-        console.log(posts);
-        
-        return posts;
+    async getAllPosts(
+        page: number,
+        limit: number
+    ): Promise<{ data: Post[]; hasMore: boolean }> {
+        const skip = (page - 1) * limit;
+        const posts = await PostModel.find()
+            .populate({
+                path: "tradesmanId",
+                select: "name profile",
+            })
+            .skip(skip)
+            .limit(limit);
+
+        const totalPosts = await PostModel.countDocuments();
+        const hasMore = skip + posts.length < totalPosts;
+
+        return { data: posts, hasMore };
     }
 }

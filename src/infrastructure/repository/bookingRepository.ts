@@ -63,14 +63,14 @@ export default class BookingRepository implements IBookingRepository {
         return [];
     }
 
-    async  checkAvailability(
+    async checkAvailability(
         tradesmanId: string,
         date: Date,
         slots: string[]
     ): Promise<boolean> {
         const startOfDay = new Date(date.setHours(0, 0, 0, 0));
         const endOfDay = new Date(date.setHours(23, 59, 59, 999));
-    
+
         // Query to find if there's a booking for the tradesman on the specified date where any of the slots overlap
         const result = await BookingModel.findOne({
             tradesmanId,
@@ -80,12 +80,10 @@ export default class BookingRepository implements IBookingRepository {
             },
             slots: { $in: slots }, // Check if any of the slots in the array are already booked
         });
-    
+
         // If result is found, at least one of the slots is unavailable
         return result === null;
     }
-    
-    
 
     async rejectBooking(bookingId: string): Promise<Booking | null> {
         const result = await BookingModel.findByIdAndUpdate(
@@ -102,12 +100,19 @@ export default class BookingRepository implements IBookingRepository {
 
     async getScheduledBooking(
         tradesmanId: string,
-        date: string
-    ): Promise<Booking[]> {
+        date: string,
+        page: number | undefined,
+        pageSize: number | undefined
+    ): Promise<{
+        bookings: Booking[];
+        totalCount: number;
+        page: number;
+    }> {
         let query: object = {
             tradesmanId,
             status: "booked",
         };
+
         if (date) {
             const startDate = new Date(date);
             const endDate = new Date(date);
@@ -127,16 +132,28 @@ export default class BookingRepository implements IBookingRepository {
             };
         }
 
-        const result = await BookingModel.find(query).sort({
-            bookingDate: -1,
-        });
-        await UserModel.populate(result, {
+        const offset =
+            (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
+
+        const totalCount = await BookingModel.countDocuments(query);
+
+        const bookings = await BookingModel.find(query)
+            .sort({ bookingDate: -1 })
+            .skip(offset)
+            .limit(pageSize ? Number(pageSize) : 10);
+
+        await UserModel.populate(bookings, {
             path: "userId",
             select: { name: 1, profile: 1 },
         });
 
-        return result;
+        return {
+            bookings,
+            totalCount,
+            page: page ? Number(page) : 1,
+        };
     }
+
     async changeToCompleted(bookingId: string): Promise<Booking | null> {
         const booking = await BookingModel.findByIdAndUpdate(
             bookingId,
@@ -152,12 +169,19 @@ export default class BookingRepository implements IBookingRepository {
 
     async getCompletedBookings(
         tradesmanId: string,
-        date: string
-    ): Promise<Booking[]> {
+        date: string,
+        page: number | undefined,
+        pageSize: number | undefined
+    ): Promise<{
+        bookings: Booking[];
+        totalCount: number;
+        page: number;
+    }> {
         let query: object = {
             tradesmanId,
             status: "completed",
         };
+
         if (date) {
             const startDate = new Date(date);
             const endDate = new Date(date);
@@ -176,12 +200,28 @@ export default class BookingRepository implements IBookingRepository {
                 ],
             };
         }
-        const bookings = await BookingModel.find(query).populate({
-            path: "userId",
-            select: "name profile",
-        });
-        return bookings;
+
+        const offset =
+            (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
+
+        const totalCount = await BookingModel.countDocuments(query);
+
+        const bookings = await BookingModel.find(query)
+            .sort({ bookingDate: -1 })
+            .skip(offset)
+            .limit(pageSize ? Number(pageSize) : 10)
+            .populate({
+                path: "userId",
+                select: "name profile",
+            });
+
+        return {
+            bookings,
+            totalCount,
+            page: page ? Number(page) : 1,
+        };
     }
+
     async getAllUserBookings(
         userId: string,
         limit: number,
@@ -463,7 +503,7 @@ export default class BookingRepository implements IBookingRepository {
         };
 
         const count = await BookingModel.find(query).countDocuments();
-        
+
         return count;
     }
 }

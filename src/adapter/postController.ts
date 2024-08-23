@@ -158,7 +158,18 @@ export default class PostController {
 
     async getAllPosts(req: Req, res: Res, next: Next) {
         try {
-            const result = await this.postUsecase.getAllPosts();
+            const {page,limit} = req.query
+            const result = await this.postUsecase.getAllPosts(Number(page),Number(limit));
+            res.status(result.status).json(result.data);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async deleteReply(req: Req, res: Res, next: Next) {
+        try {
+            const { commentId,replyId } = req.params;
+            const result = await this.postUsecase.removeReply(commentId,replyId);
             res.status(result.status).json(result.data);
         } catch (error) {
             next(error);

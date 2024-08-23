@@ -97,4 +97,27 @@ export default class CommentRepository implements ICommentRepository {
 
         return totalCount;
     }
+    async removeReply(commentId: string, replyId: string): Promise<Comment | null> {
+        const comment = await CommentModel.findById(commentId);
+    
+        if (comment) {
+            comment.replies = comment.replies.filter(
+                (reply) => reply._id.toString() !== replyId
+            );
+    
+            if (comment.softDelete && comment.replies.length === 0) {
+                const deletedComment = await CommentModel.findByIdAndDelete(commentId);
+                return deletedComment;
+            } else {
+                await comment.save();
+            }
+        }
+    
+        await UserModel.populate(comment, {
+            path: "userId replies.userId",
+            select: { name: 1, profile: 1 },
+        });
+    
+        return comment;
+    }
 }

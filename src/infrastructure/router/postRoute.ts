@@ -63,6 +63,13 @@ postRouter.delete(
         postController.deleteComment(req, res, next)
 );
 
+postRouter.delete(
+    "/delete-reply/:commentId/:replyId",
+    userAuth,
+    (req: Req, res: Res, next: Next) =>
+        postController.deleteReply(req, res, next)
+);
+
 postRouter.post("/add-reply", userAuth, (req: Req, res: Res, next: Next) =>
     postController.addReply(req, res, next)
 );

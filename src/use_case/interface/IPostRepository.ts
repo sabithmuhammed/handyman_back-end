@@ -7,5 +7,8 @@ export default interface IPostRepository {
     removeLike(postId: string, userId: string): Promise<number>;
     removePost(postId: string): Promise<Post | null>;
     editPost(postId: string, text: string): Promise<Post | null>;
-    getAllPosts(): Promise<Post[]>;
+    getAllPosts(
+        page: number,
+        limit: number
+    ): Promise<{ data: Post[]; hasMore: boolean }>;
 }

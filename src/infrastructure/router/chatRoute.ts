@@ -5,13 +5,24 @@ import ChatUsecase from "../../use_case/chatUsecase";
 import MessageRepository from "../repository/messageRepository";
 import ConversationRepository from "../repository/conversationRepository";
 import userAuth from "../middlewares/userAuth";
+import { Multer } from "../middlewares/multer";
+import Cloudinary from "../utils/cloudinary";
+import FileOperations from "../utils/fileOperations";
 
 const chatRouter = express.Router();
 
 const messageRepository = new MessageRepository();
 const conversationRepository = new ConversationRepository();
+
+const cloudinary = new Cloudinary();
+const fileOperations = new FileOperations();
+
 const chatUsecase = new ChatUsecase(conversationRepository, messageRepository);
-const chatController = new ChatController(chatUsecase);
+const chatController = new ChatController(
+    chatUsecase,
+    cloudinary,
+    fileOperations
+);
 
 chatRouter.get(
     "/get-conversations/:senderId",
@@ -30,6 +41,7 @@ chatRouter.post(
 chatRouter.post(
     "/save-message",
     userAuth,
+    Multer.single("content"),
     (req: Req, res: Res, next: Next) =>
         chatController.addMessage(req, res, next)
 );
@@ -47,6 +59,5 @@ chatRouter.patch(
     (req: Req, res: Res, next: Next) =>
         chatController.removeUnreadCount(req, res, next)
 );
-
 
 export default chatRouter;

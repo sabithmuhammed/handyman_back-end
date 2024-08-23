@@ -71,9 +71,9 @@ export default class TradesmanUsecase {
         };
     }
 
-    async getPendingVerifications() {
+    async getPendingVerifications(pageSize:number,page:number) {
         const tradesmen =
-            await this.tradesmanRepository.getAllPendingTradesmen();
+            await this.tradesmanRepository.getAllPendingTradesmen(pageSize,page);
 
         return {
             status: STATUS_CODES.OK,

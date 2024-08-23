@@ -4,7 +4,14 @@ export default interface ITradesmanRepository {
     saveTradesman(tradesman: Tradesman): Promise<Tradesman>;
     findByUserId(userId: string): Promise<Tradesman | null>;
     getProfileFull(tradesmanId: string): Promise<Tradesman | null>;
-    getAllPendingTradesmen(): Promise<Tradesman[] | null>;
+    getAllPendingTradesmen(
+        pageSize: number,
+        page: number
+    ): Promise<{
+        tradesmen: Tradesman[] | null;
+        totalCount: number;
+        page: number;
+    }>;
     changeVerificationStatus(
         tradesmanId: string,
         status: VerificationType

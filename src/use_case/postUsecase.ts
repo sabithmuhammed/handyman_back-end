@@ -73,6 +73,14 @@ export default class PostUsecase {
         };
     }
 
+    async removeReply(commentId: string,replyId:string) {
+        const result = await this.commentRepository.removeReply(commentId,replyId);
+        return {
+            status: STATUS_CODES.OK,
+            data: result,
+        };
+    }
+
     async addReply(commentId: string, userId: string, comment: string) {
         const result = await this.commentRepository.addReply(
             commentId,
@@ -109,8 +117,8 @@ export default class PostUsecase {
         };
     }
 
-    async getAllPosts() {
-        const result = await this.postRepository.getAllPosts();
+    async getAllPosts(page:number,limit:number) {
+        const result = await this.postRepository.getAllPosts(page,limit);
         return {
             status: STATUS_CODES.OK,
             data: result,

@@ -6,7 +6,11 @@ export default interface Comment {
     userId: string | ObjectId;
     comment: string;
     softDelete: boolean;
-    replies: { userId: string | ObjectId; comment: string; createdAt: Date }[];
-    createdAt:Date
+    replies: {
+        _id: ObjectId | string;
+        userId: string | ObjectId;
+        comment: string;
+        createdAt: Date;
+    }[];
+    createdAt: Date;
 }
- 

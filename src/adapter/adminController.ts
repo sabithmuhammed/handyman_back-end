@@ -14,8 +14,10 @@ export default class AdminController {
 
     async getPending(req: Req, res: Res, next: Next) {
         try {
+
+            const {pageSize,page} = req.query;
             const tradesmen =
-                await this.tradesmanUsecase.getPendingVerifications();
+                await this.tradesmanUsecase.getPendingVerifications(Number(pageSize),Number(page));
             res.status(tradesmen.status).json(tradesmen.data);
         } catch (error) {
             next(error);

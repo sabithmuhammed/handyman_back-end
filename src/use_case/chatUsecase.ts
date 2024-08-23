@@ -43,7 +43,7 @@ export default class ChatUsecase {
         );
         const conversation = await this.conversationRepository.addLastMessage(
             newMessage.conversationId as unknown as string,
-            newMessage.message.content
+            newMessage.message.type==="text"?newMessage.message.content:newMessage.message.type==="audio"?"voice-util":"image-util"
         );
         await this.conversationRepository.addUnreadMessage(
             conversation._id as string,

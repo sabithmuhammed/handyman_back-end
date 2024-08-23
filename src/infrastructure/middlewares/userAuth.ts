@@ -38,7 +38,7 @@ const userAuth = async (req: Req, res: Res, next: Next) => {
                 if (userData) {
                     if (userData.isBlocked) {
                         res.status(STATUS_CODES.FORBIDDEN).json(
-                            "You have been blocked."
+                            "User Blocked"
                         );
                         return;
                     }

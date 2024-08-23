@@ -82,10 +82,17 @@ export default class BookingUsecase {
         };
     }
 
-    async getScheduledBooking(tradesmanId: string, date: string) {
+    async getScheduledBooking(
+        tradesmanId: string,
+        date: string,
+        page: number,
+        pageSize: number
+    ) {
         const data = await this.bookingRepository.getScheduledBooking(
             tradesmanId,
-            date
+            date,
+            page,
+            pageSize
         );
         return {
             status: STATUS_CODES.OK,
@@ -103,10 +110,17 @@ export default class BookingUsecase {
         };
     }
 
-    async getCompledBookings(tradesmanId: string, date: string) {
+    async getCompledBookings(
+        tradesmanId: string,
+        date: string,
+        page: number,
+        pageSize: number
+    ) {
         const result = await this.bookingRepository.getCompletedBookings(
             tradesmanId,
-            date
+            date,
+            page,
+            pageSize
         );
         return {
             status: STATUS_CODES.OK,
@@ -197,8 +211,8 @@ export default class BookingUsecase {
             date
         );
         return {
-            status:STATUS_CODES.OK,
-            data:result
-        }
+            status: STATUS_CODES.OK,
+            data: result,
+        };
     }
 }

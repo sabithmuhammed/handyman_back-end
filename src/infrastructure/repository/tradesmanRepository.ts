@@ -15,11 +15,32 @@ export default class TradesmanRepository implements ITradesmanRepository {
         const tradesman = await TradesmanModel.findOne({ userId });
         return tradesman;
     }
-    async getAllPendingTradesmen(): Promise<Tradesman[] | null> {
-        const tradesmen = await TradesmanModel.find({
+    async getAllPendingTradesmen(
+        page: number | undefined,
+        pageSize: number | undefined
+    ): Promise<{
+        tradesmen: Tradesman[] | null;
+        totalCount: number;
+        page: number;
+    }> {
+        const offset =
+            (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
+
+        const totalCount = await TradesmanModel.countDocuments({
             verificationStatus: "pending",
         });
-        return tradesmen;
+
+        const tradesmen = await TradesmanModel.find({
+            verificationStatus: "pending",
+        })
+            .skip(offset)
+            .limit(pageSize ? Number(pageSize) : 10);
+
+        return {
+            tradesmen,
+            totalCount,
+            page: page ? Number(page) : 1,
+        };
     }
 
     async changeVerificationStatus(
@@ -50,17 +71,20 @@ export default class TradesmanRepository implements ITradesmanRepository {
         page: number;
     }> {
         console.log("Filters received:", JSON.stringify(filters, null, 2));
-    
-        const offset = (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
+
+        const offset =
+            (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
         const limit = pageSize ? Number(pageSize) : 10;
-    
+
         let pipeline: any[] = [
             {
                 $match: {
-                    category: filters.category ? {
-                        $regex: ".*" + filters.category + ".*",
-                        $options: "i",
-                    } : { $exists: true },
+                    category: filters.category
+                        ? {
+                              $regex: ".*" + filters.category + ".*",
+                              $options: "i",
+                          }
+                        : { $exists: true },
                     location: {
                         $geoWithin: {
                             $centerSphere: [
@@ -72,22 +96,36 @@ export default class TradesmanRepository implements ITradesmanRepository {
                 },
             },
         ];
-    
+
         if (filters.date) {
             const date = new Date(filters.date);
             console.log("Parsed date:", date);
             const dayOfWeek = date.getUTCDay();
-            const startOfDay = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+            const startOfDay = new Date(
+                date.getUTCFullYear(),
+                date.getUTCMonth(),
+                date.getUTCDate()
+            );
             const endOfDay = new Date(startOfDay);
             endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
-    
+
             pipeline = [
                 ...pipeline,
                 {
                     $match: {
                         $expr: {
                             $and: [
-                                { $eq: [{ $arrayElemAt: ["$configuration.workingDays.isWorking", dayOfWeek] }, true] },
+                                {
+                                    $eq: [
+                                        {
+                                            $arrayElemAt: [
+                                                "$configuration.workingDays.isWorking",
+                                                dayOfWeek,
+                                            ],
+                                        },
+                                        true,
+                                    ],
+                                },
                                 {
                                     $not: {
                                         $anyElementTrue: {
@@ -96,58 +134,129 @@ export default class TradesmanRepository implements ITradesmanRepository {
                                                 as: "leave",
                                                 in: {
                                                     $and: [
-                                                        { $gte: ["$$leave.date", startOfDay] },
-                                                        { $lt: ["$$leave.date", endOfDay] }
-                                                    ]
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
+                                                        {
+                                                            $gte: [
+                                                                "$$leave.date",
+                                                                startOfDay,
+                                                            ],
+                                                        },
+                                                        {
+                                                            $lt: [
+                                                                "$$leave.date",
+                                                                endOfDay,
+                                                            ],
+                                                        },
+                                                    ],
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    },
                 },
                 {
                     $addFields: {
-                        workingHours: { $arrayElemAt: ["$configuration.workingDays", dayOfWeek] },
+                        workingHours: {
+                            $arrayElemAt: [
+                                "$configuration.workingDays",
+                                dayOfWeek,
+                            ],
+                        },
                         slotSize: "$configuration.slotSize",
-                        bufferTime: "$configuration.bufferTime"
-                    }
+                        bufferTime: "$configuration.bufferTime",
+                    },
                 },
                 {
                     $addFields: {
                         startMinutes: {
                             $sum: [
-                                { $multiply: [{ $toInt: { $substr: ["$workingHours.start", 0, 2] } }, 60] },
-                                { $toInt: { $substr: ["$workingHours.start", 3, 2] } }
-                            ]
+                                {
+                                    $multiply: [
+                                        {
+                                            $toInt: {
+                                                $substr: [
+                                                    "$workingHours.start",
+                                                    0,
+                                                    2,
+                                                ],
+                                            },
+                                        },
+                                        60,
+                                    ],
+                                },
+                                {
+                                    $toInt: {
+                                        $substr: ["$workingHours.start", 3, 2],
+                                    },
+                                },
+                            ],
                         },
                         endMinutes: {
                             $sum: [
-                                { $multiply: [{ $toInt: { $substr: ["$workingHours.end", 0, 2] } }, 60] },
-                                { $toInt: { $substr: ["$workingHours.end", 3, 2] } }
-                            ]
-                        }
-                    }
+                                {
+                                    $multiply: [
+                                        {
+                                            $toInt: {
+                                                $substr: [
+                                                    "$workingHours.end",
+                                                    0,
+                                                    2,
+                                                ],
+                                            },
+                                        },
+                                        60,
+                                    ],
+                                },
+                                {
+                                    $toInt: {
+                                        $substr: ["$workingHours.end", 3, 2],
+                                    },
+                                },
+                            ],
+                        },
+                    },
                 },
                 {
                     $addFields: {
-                        totalWorkingMinutes: { $subtract: ["$endMinutes", "$startMinutes"] },
-                        slotSizeMinutes: { $multiply: ["$slotSize", 60] }
-                    }
+                        totalWorkingMinutes: {
+                            $subtract: ["$endMinutes", "$startMinutes"],
+                        },
+                        slotSizeMinutes: { $multiply: ["$slotSize", 60] },
+                    },
                 },
                 {
                     $addFields: {
                         availableSlots: {
                             $floor: {
                                 $divide: [
-                                    { $subtract: ["$totalWorkingMinutes", { $multiply: ["$bufferTime", { $subtract: [{ $divide: ["$totalWorkingMinutes", "$slotSizeMinutes"] }, 1] }] }] },
-                                    "$slotSizeMinutes"
-                                ]
-                            }
-                        }
-                    }
+                                    {
+                                        $subtract: [
+                                            "$totalWorkingMinutes",
+                                            {
+                                                $multiply: [
+                                                    "$bufferTime",
+                                                    {
+                                                        $subtract: [
+                                                            {
+                                                                $divide: [
+                                                                    "$totalWorkingMinutes",
+                                                                    "$slotSizeMinutes",
+                                                                ],
+                                                            },
+                                                            1,
+                                                        ],
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                    "$slotSizeMinutes",
+                                ],
+                            },
+                        },
+                    },
                 },
                 {
                     $lookup: {
@@ -158,29 +267,44 @@ export default class TradesmanRepository implements ITradesmanRepository {
                                 $match: {
                                     $expr: {
                                         $and: [
-                                            { $eq: ["$tradesmanId", "$$tradesmanId"] },
-                                            { $gte: ["$bookingDate", startOfDay] },
-                                            { $lt: ["$bookingDate", endOfDay] }
-                                        ]
-                                    }
-                                }
-                            }
+                                            {
+                                                $eq: [
+                                                    "$tradesmanId",
+                                                    "$$tradesmanId",
+                                                ],
+                                            },
+                                            {
+                                                $gte: [
+                                                    "$bookingDate",
+                                                    startOfDay,
+                                                ],
+                                            },
+                                            { $lt: ["$bookingDate", endOfDay] },
+                                        ],
+                                    },
+                                },
+                            },
                         ],
-                        as: "bookings"
-                    }
+                        as: "bookings",
+                    },
                 },
                 {
                     $addFields: {
                         bookingCount: { $size: "$bookings" },
-                        remainingSlots: { $subtract: ["$availableSlots", { $size: "$bookings" }] }
-                    }
+                        remainingSlots: {
+                            $subtract: [
+                                "$availableSlots",
+                                { $size: "$bookings" },
+                            ],
+                        },
+                    },
                 },
                 {
                     $match: {
                         $expr: {
-                            $gt: ["$remainingSlots", 0]
-                        }
-                    }
+                            $gt: ["$remainingSlots", 0],
+                        },
+                    },
                 },
                 {
                     $project: {
@@ -194,33 +318,29 @@ export default class TradesmanRepository implements ITradesmanRepository {
                         isBlocked: 1,
                         availableSlots: 1,
                         bookingCount: 1,
-                        remainingSlots: 1
-                    }
-                }
+                        remainingSlots: 1,
+                    },
+                },
             ];
         }
-    
+
         // Add pagination stages
-        pipeline.push(
-            { $skip: offset },
-            { $limit: limit }
-        );
-    
+        pipeline.push({ $skip: offset }, { $limit: limit });
+
         console.log("Final pipeline:", JSON.stringify(pipeline, null, 2));
-    
+
         // Execute the aggregation pipeline
         const tradesmen = await TradesmanModel.aggregate(pipeline);
         console.log("Tradesmen found:", tradesmen.length);
         console.log("First tradesman:", JSON.stringify(tradesmen[0], null, 2));
-    
+
         // Get the total count of tradesmen matching the filters (without pagination)
-        const countPipeline = pipeline.slice(0, -2);  // Remove skip and limit stages
+        const countPipeline = pipeline.slice(0, -2); // Remove skip and limit stages
         countPipeline.push({ $count: "totalCount" });
         const countResult = await TradesmanModel.aggregate(countPipeline);
-        const totalCount = countResult.length > 0 ? countResult[0].totalCount : 0;
-    
-        console.log("Total count:", totalCount);
-    
+        const totalCount =
+            countResult.length > 0 ? countResult[0].totalCount : 0;
+
         return {
             tradesmen,
             totalCount,
@@ -290,8 +410,6 @@ export default class TradesmanRepository implements ITradesmanRepository {
         })
             .skip(offset)
             .limit(pageSize ? Number(pageSize) : 10);
-        console.log(tradesmen);
-
         return {
             tradesmen,
             totalCount,

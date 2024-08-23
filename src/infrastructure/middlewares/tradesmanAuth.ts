@@ -21,6 +21,9 @@ const tradesmanAuth = async (req: Req, res: Res, next: Next) => {
                     decoded.userId
                 );
                 if (tradesman) {
+                    if(tradesman.isBlocked){
+                        return res.status(STATUS_CODES.FORBIDDEN).json("Tradesman Blocked")
+                    }
                     (req as any).tradesman = tradesman._id as string;
                     next();
                     return;

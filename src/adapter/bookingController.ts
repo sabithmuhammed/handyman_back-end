@@ -70,10 +70,12 @@ export default class BookingController {
     async getScheduledBooking(req: Req, res: Res, next: Next) {
         try {
             const tradesmanId = (req as any)?.tradesman;
-            const { date } = req.query;
+            const { date, page, pageSize } = req.query;
             const result = await this.bookingUsecase.getScheduledBooking(
                 tradesmanId,
-                date as string
+                date as string,
+                page ? Number(page) : 1,
+                pageSize ? Number(pageSize) : 5
             );
             res.status(result.status).json(result.data);
         } catch (error) {
@@ -94,10 +96,12 @@ export default class BookingController {
     async getCompletedBookings(req: Req, res: Res, next: Next) {
         try {
             const tradesmanId = (req as any)?.tradesman;
-            const { date } = req.query;
+            const { date, page, pageSize } = req.query;
             const result = await this.bookingUsecase.getCompledBookings(
                 tradesmanId,
-                date as string
+                date as string,
+                page ? Number(page) : 1,
+                pageSize ? Number(pageSize) : 5
             );
             res.status(result.status).json(result.data);
         } catch (error) {
@@ -218,19 +222,25 @@ export default class BookingController {
         try {
             const tradesmanId = (req as any)?.tradesman;
             const { leaves } = req.query;
-    
+
             // Map the array of dates to an array of promises
-            const bookingPromises = (leaves as string[]).map(async (date: string) => {
-                const { data } = await this.bookingUsecase.checkBookingForDate(tradesmanId, date);
-                return data === 0;
-            });
-    
+            const bookingPromises = (leaves as string[]).map(
+                async (date: string) => {
+                    const { data } =
+                        await this.bookingUsecase.checkBookingForDate(
+                            tradesmanId,
+                            date
+                        );
+                    return data === 0;
+                }
+            );
+
             // Wait for all promises to resolve
             const results = await Promise.all(bookingPromises);
-    
+
             // Determine if all dates have no bookings
             const hasNoBookings = results.every((result) => result === true);
-    
+
             if (hasNoBookings) {
                 res.status(STATUS_CODES.OK).json({ status: "success" });
             } else {
@@ -242,5 +252,4 @@ export default class BookingController {
             next(error);
         }
     }
-    
 }
