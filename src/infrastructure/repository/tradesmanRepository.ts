@@ -23,6 +23,7 @@ export default class TradesmanRepository implements ITradesmanRepository {
         totalCount: number;
         page: number;
     }> {
+        
         const offset =
             (page ? Number(page) - 1 : 0) * (pageSize ? Number(pageSize) : 10);
 
