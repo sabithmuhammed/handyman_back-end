@@ -57,6 +57,10 @@ app.use("/api/booking", bookingRouter);
 app.use("/api/post", postRouter); 
 app.use("/api/review", reviewRouter); 
 
+app.use("/health",(req,res)=>{
+    res.send("I'm doing great ;).")
+})
+
 app.use(errorHandler);
 
 initializeSocket(httpServer);
